@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Send,
   Plus,
@@ -31,16 +31,62 @@ export default function ChatInput({
     useRef<HTMLInputElement>(null);
 
   const textInputRef =
-    useRef<HTMLInputElement>(null);
+    useRef<HTMLTextAreaElement>(null);
+
+  // ==========================================
+  // AUTO RESIZE TEXTAREA
+  // ==========================================
+
+  function resizeTextarea() {
+    const textarea =
+      textInputRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    // Reset height first so shrinking works
+    textarea.style.height = "auto";
+
+    // Maximum height
+    const maxHeight = 200;
+
+    const newHeight = Math.min(
+      textarea.scrollHeight,
+      maxHeight,
+    );
+
+    textarea.style.height =
+      `${newHeight}px`;
+
+    // Enable scrolling only after max height
+    textarea.style.overflowY =
+      textarea.scrollHeight > maxHeight
+        ? "auto"
+        : "hidden";
+  }
+
+  // Resize whenever text changes
+  useEffect(() => {
+    resizeTextarea();
+  }, [text]);
+
+  // ==========================================
+  // SUBMIT
+  // ==========================================
 
   function submit() {
-    const cleanText = text.trim();
+    const cleanText =
+      text.trim();
 
     if (!cleanText && !file) {
       return;
     }
 
-    onSend(cleanText, file);
+    onSend(
+      cleanText,
+      file,
+    );
 
     setText("");
     setFile(null);
@@ -48,7 +94,69 @@ export default function ChatInput({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+
+    // Reset textarea after sending
+    requestAnimationFrame(() => {
+      const textarea =
+        textInputRef.current;
+
+      if (!textarea) {
+        return;
+      }
+
+      textarea.style.height =
+        "auto";
+
+      textarea.style.overflowY =
+        "hidden";
+    });
   }
+
+  // ==========================================
+  // TEXT CHANGE
+  // ==========================================
+
+  function handleTextChange(
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+  ) {
+    setText(event.target.value);
+
+    // Resize immediately for typing/pasting
+    requestAnimationFrame(() => {
+      resizeTextarea();
+    });
+  }
+
+  // ==========================================
+  // KEYBOARD
+  // ==========================================
+
+  function handleKeyDown(
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) {
+    // Enter = send
+    // Shift + Enter = new line
+
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
+      event.preventDefault();
+
+      if (!loading) {
+        submit();
+      }
+
+      return;
+    }
+
+    // Shift + Enter
+    // Let browser insert newline normally
+  }
+
+  // ==========================================
+  // VOICE TRANSCRIPT
+  // ==========================================
 
   function handleVoiceTranscript(
     transcript: string,
@@ -61,7 +169,11 @@ export default function ChatInput({
     }
 
     if (voiceMode) {
-      onSend(cleanTranscript, null);
+      onSend(
+        cleanTranscript,
+        null,
+      );
+
       return;
     }
 
@@ -76,8 +188,15 @@ export default function ChatInput({
       return `${current} ${cleanTranscript}`;
     });
 
-    textInputRef.current?.focus();
+    requestAnimationFrame(() => {
+      textInputRef.current?.focus();
+      resizeTextarea();
+    });
   }
+
+  // ==========================================
+  // FILE CHANGE
+  // ==========================================
 
   function handleFileChange(
     event: React.ChangeEvent<HTMLInputElement>,
@@ -89,6 +208,7 @@ export default function ChatInput({
       return;
     }
 
+    // PDF only
     if (
       selectedFile.type !==
       "application/pdf"
@@ -102,10 +222,14 @@ export default function ChatInput({
       return;
     }
 
+    // 10 MB limit
     const maxSize =
       10 * 1024 * 1024;
 
-    if (selectedFile.size > maxSize) {
+    if (
+      selectedFile.size >
+      maxSize
+    ) {
       alert(
         "PDF must be smaller than 10 MB.",
       );
@@ -116,7 +240,16 @@ export default function ChatInput({
     }
 
     setFile(selectedFile);
+
+    // Focus textarea
+    requestAnimationFrame(() => {
+      textInputRef.current?.focus();
+    });
   }
+
+  // ==========================================
+  // REMOVE FILE
+  // ==========================================
 
   function removeFile() {
     setFile(null);
@@ -124,11 +257,17 @@ export default function ChatInput({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+
+    textInputRef.current?.focus();
   }
 
   return (
     <div className="pt-2 pb-3 bg-[#1e1e1e]">
       <div className="max-w-3xl mx-auto px-3">
+
+        {/* ======================================
+            FILE PREVIEW
+        ====================================== */}
 
         {file && (
           <div className="mb-2">
@@ -180,20 +319,29 @@ export default function ChatInput({
           </div>
         )}
 
+        {/* ======================================
+            CHAT INPUT
+        ====================================== */}
+
         <div
           className="
             flex
             gap-2
-            items-center
+            items-end
             bg-[#303030]
-            rounded-xl
-            p-2
+            rounded-2xl
+            px-2
+            py-2
             border
             border-[#3f3f3f]
+            focus-within:border-[#555]
+            transition
           "
         >
 
-          {/* PDF */}
+          {/* ====================================
+              PDF INPUT
+          ==================================== */}
 
           <input
             ref={fileInputRef}
@@ -216,6 +364,7 @@ export default function ChatInput({
               justify-center
               w-9
               h-9
+              shrink-0
               rounded-lg
               text-gray-300
               hover:bg-[#404040]
@@ -228,23 +377,17 @@ export default function ChatInput({
             <Plus size={22} />
           </button>
 
-          {/* Text */}
+          {/* ====================================
+              AUTO GROW TEXTAREA
+          ==================================== */}
 
-          <input
+          <textarea
             ref={textInputRef}
             value={text}
-            onChange={(event) =>
-              setText(event.target.value)
-            }
-            onKeyDown={(event) => {
-              if (
-                event.key === "Enter" &&
-                !event.shiftKey
-              ) {
-                event.preventDefault();
-                submit();
-              }
-            }}
+            onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
+            rows={1}
             placeholder={
               file
                 ? "Ask something about this PDF..."
@@ -252,19 +395,30 @@ export default function ChatInput({
                   ? "Voice mode is active..."
                   : "Message AI..."
             }
-            disabled={loading}
             className="
               flex-1
+              min-w-0
               bg-transparent
               text-white
-              p-2
+              resize-none
               outline-none
+              border-none
+              px-2
+              py-2
+              leading-6
               placeholder:text-gray-500
-              min-w-0
+              max-h-[200px]
+              overflow-y-hidden
+
+              scrollbar-thin
+              scrollbar-thumb-[#555]
+              scrollbar-track-transparent
             "
           />
 
-          {/* Voice mode */}
+          {/* ====================================
+              VOICE MODE
+          ==================================== */}
 
           <button
             type="button"
@@ -285,6 +439,7 @@ export default function ChatInput({
               justify-center
               w-9
               h-9
+              shrink-0
               rounded-lg
               transition
 
@@ -301,7 +456,9 @@ export default function ChatInput({
             <AudioLines size={18} />
           </button>
 
-          {/* Microphone */}
+          {/* ====================================
+              MICROPHONE
+          ==================================== */}
 
           <VoiceButton
             onTranscript={
@@ -311,7 +468,9 @@ export default function ChatInput({
             autoStart={voiceMode}
           />
 
-          {/* Send */}
+          {/* ====================================
+              SEND
+          ==================================== */}
 
           <button
             type="button"
@@ -327,17 +486,36 @@ export default function ChatInput({
               rounded-lg
               w-9
               h-9
+              shrink-0
               flex
               items-center
               justify-center
               disabled:opacity-40
               disabled:cursor-not-allowed
               transition
+              hover:bg-gray-200
             "
           >
             <Send size={18} />
           </button>
+
         </div>
+
+        {/* ======================================
+            HELPER TEXT
+        ====================================== */}
+
+        <p
+          className="
+            text-center
+            text-[11px]
+            text-gray-600
+            mt-2
+          "
+        >
+          Enter to send · Shift + Enter for new line
+        </p>
+
       </div>
     </div>
   );
