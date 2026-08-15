@@ -10,13 +10,14 @@ import {
   FolderKanban,
   CalendarClock,
   Plug,
-  FileBox,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
 import { useChatStore } from "@/store/chatStore";
 import { deleteConversation } from "@/services/chat";
+
+import PluginPanel from "@/components/plugins/PluginPanel";
 
 export default function Sidebar() {
   const {
@@ -33,9 +34,19 @@ export default function Sidebar() {
 
   const [deletingChatId, setDeletingChatId] = useState<number | null>(null);
 
+  const [showPlugins, setShowPlugins] = useState(false);
+
+  // =========================================
+  // LOAD CONVERSATIONS
+  // =========================================
+
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  // =========================================
+  // CREATE CHAT
+  // =========================================
 
   async function handleCreateChat() {
     if (creatingChat) {
@@ -53,10 +64,15 @@ export default function Sidebar() {
     }
   }
 
+  // =========================================
+  // DELETE CHAT
+  // =========================================
+
   async function handleDeleteChat(
     event: React.MouseEvent<HTMLButtonElement>,
     id: number,
   ) {
+    // Prevent selecting the conversation
     event.stopPropagation();
 
     if (deletingChatId !== null) {
@@ -74,8 +90,10 @@ export default function Sidebar() {
     setDeletingChatId(id);
 
     try {
+      // Delete from PostgreSQL
       await deleteConversation(id);
 
+      // Delete from Zustand
       deleteChat(id);
     } catch (error) {
       console.error("Failed to delete conversation:", error);
@@ -83,6 +101,10 @@ export default function Sidebar() {
       setDeletingChatId(null);
     }
   }
+
+  // =========================================
+  // UI
+  // =========================================
 
   return (
     <aside
@@ -95,11 +117,27 @@ export default function Sidebar() {
         text-[#ececec]
         border-r
         border-[#2f2f2f]
+        relative
       "
     >
+      {/* =========================================
+          TOP SECTION
+      ========================================= */}
+
       <div className="p-3">
-        <div className="flex items-center justify-between mb-3">
+        {/* BRAND HEADER */}
+
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+            mb-3
+          "
+        >
           <div className="flex items-center gap-2">
+            {/* Logo */}
+
             <div
               className="
                 h-8
@@ -116,8 +154,12 @@ export default function Sidebar() {
               C
             </div>
 
+            {/* Name */}
+
             <span className="font-semibold text-sm">CacheAI</span>
           </div>
+
+          {/* Collapse */}
 
           <button
             type="button"
@@ -134,6 +176,11 @@ export default function Sidebar() {
             <PanelLeftClose size={18} />
           </button>
         </div>
+
+        {/* =========================================
+            NEW CHAT
+        ========================================= */}
+
         <button
           type="button"
           onClick={handleCreateChat}
@@ -160,7 +207,13 @@ export default function Sidebar() {
           <span>{creatingChat ? "Creating..." : "New chat"}</span>
         </button>
 
+        {/* =========================================
+            NAVIGATION
+        ========================================= */}
+
         <div className="mt-3 space-y-1">
+          {/* PROJECTS */}
+
           <button
             type="button"
             className="
@@ -183,7 +236,7 @@ export default function Sidebar() {
             <span>Projects</span>
           </button>
 
-          {/* Schedule */}
+          {/* SCHEDULE */}
 
           <button
             type="button"
@@ -207,11 +260,12 @@ export default function Sidebar() {
             <span>Schedule</span>
           </button>
 
-          {/* Plugins */}
+          {/* PLUGINS */}
 
           <button
             type="button"
-            className="
+            onClick={() => setShowPlugins(true)}
+            className={`
               w-full
               flex
               items-center
@@ -220,11 +274,14 @@ export default function Sidebar() {
               py-2.5
               rounded-lg
               text-sm
-              text-gray-300
-              hover:bg-[#242424]
-              hover:text-white
               transition
-            "
+
+              ${
+                showPlugins
+                  ? "bg-[#2a2a2a] text-white"
+                  : "text-gray-300 hover:bg-[#242424] hover:text-white"
+              }
+            `}
           >
             <Plug size={17} />
 
@@ -261,6 +318,10 @@ export default function Sidebar() {
         </button>
       </div>
 
+      {/* =========================================
+          CONVERSATIONS
+      ========================================= */}
+
       <div
         className="
           flex-1
@@ -269,6 +330,8 @@ export default function Sidebar() {
           chat-scroll
         "
       >
+        {/* Section title */}
+
         <p
           className="
             px-3
@@ -281,17 +344,23 @@ export default function Sidebar() {
           Chats
         </p>
 
+        {/* Loading */}
+
         {loadingConversations && (
           <div className="px-3 py-3 text-sm text-gray-500">
             Loading conversations...
           </div>
         )}
 
+        {/* Empty */}
+
         {!loadingConversations && conversations.length === 0 && (
           <div className="px-3 py-3 text-sm text-gray-500">
             No conversations yet.
           </div>
         )}
+
+        {/* Conversation list */}
 
         <div className="space-y-1">
           {conversations.map((chat) => {
@@ -378,7 +447,7 @@ export default function Sidebar() {
       </div>
 
       {/* =========================================
-          BOTTOM
+          BOTTOM SECTION
       ========================================= */}
 
       <div
@@ -388,85 +457,90 @@ export default function Sidebar() {
           border-[#2f2f2f]
         "
       >
+        {/* =========================================
+            AI MODEL
+        ========================================= */}
+
         <div
           className="
-    px-2
-    py-2
-    border-t
-    border-[#2f2f2f]
-  "
+            flex
+            items-center
+            gap-2.5
+            px-2
+            py-2
+            rounded-lg
+            hover:bg-[#242424]
+            transition
+            cursor-pointer
+          "
         >
-          {/* AI MODEL */}
+          {/* Avatar */}
 
           <div
             className="
-      flex
-      items-center
-      gap-2.5
-      px-2
-      py-2
-      rounded-lg
-      hover:bg-[#242424]
-      transition
-      cursor-pointer
-    "
+              h-7
+              w-7
+              shrink-0
+              rounded-full
+              bg-[#303030]
+              flex
+              items-center
+              justify-center
+              text-[11px]
+              font-semibold
+            "
           >
-            <div
-              className="
-        h-7
-        w-7
-        shrink-0
-        rounded-full
-        bg-[#303030]
-        flex
-        items-center
-        justify-center
-        text-[11px]
-        font-semibold
-      "
-            >
-              C
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-200">CacheAI</p>
-
-              <p
-                className="
-          text-[11px]
-          text-gray-500
-          truncate
-        "
-              >
-                qwen2.5:3b • Ollama
-              </p>
-            </div>
+            C
           </div>
 
-          {/* SETTINGS */}
+          {/* Model information */}
 
-          <button
-            type="button"
-            className="
-      w-full
-      flex
-      items-center
-      gap-2.5
-      px-2
-      py-2
-      rounded-lg
-      hover:bg-[#242424]
-      transition
-      text-xs
-      text-gray-400
-    "
-          >
-            <Settings size={15} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-gray-200">CacheAI</p>
 
-            <span>Settings</span>
-          </button>
+            <p
+              className="
+                text-[11px]
+                text-gray-500
+                truncate
+              "
+            >
+              qwen2.5:3b • Ollama
+            </p>
+          </div>
         </div>
+
+        {/* =========================================
+            SETTINGS
+        ========================================= */}
+
+        <button
+          type="button"
+          className="
+            w-full
+            flex
+            items-center
+            gap-2.5
+            px-2
+            py-2
+            rounded-lg
+            hover:bg-[#242424]
+            transition
+            text-xs
+            text-gray-400
+          "
+        >
+          <Settings size={15} />
+
+          <span>Settings</span>
+        </button>
       </div>
+
+      {/* =========================================
+          PLUGIN PANEL
+      ========================================= */}
+
+      {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
     </aside>
   );
 }

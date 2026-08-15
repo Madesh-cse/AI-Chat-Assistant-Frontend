@@ -7,14 +7,24 @@ import {
   FileText,
   X,
   AudioLines,
+  Plug,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 
 import VoiceButton from "../voice/VoiceButton";
 
 interface ChatInputProps {
-  onSend: (text: string, file: File | null) => void;
+  onSend: (
+    text: string,
+    file: File | null,
+    stackOverflowEnabled: boolean,
+  ) => void;
+
   loading: boolean;
+
   voiceMode: boolean;
+
   onVoiceModeChange: (enabled: boolean) => void;
 }
 
@@ -25,7 +35,19 @@ export default function ChatInput({
   onVoiceModeChange,
 }: ChatInputProps) {
   const [text, setText] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+
+  const [file, setFile] =
+    useState<File | null>(null);
+
+  // ==========================================
+  // PLUGINS
+  // ==========================================
+
+  const [pluginOpen, setPluginOpen] =
+    useState(false);
+
+  const [stackOverflowEnabled, setStackOverflowEnabled] =
+    useState(false);
 
   const fileInputRef =
     useRef<HTMLInputElement>(null);
@@ -34,7 +56,7 @@ export default function ChatInput({
     useRef<HTMLTextAreaElement>(null);
 
   // ==========================================
-  // AUTO RESIZE TEXTAREA
+  // AUTO RESIZE
   // ==========================================
 
   function resizeTextarea() {
@@ -45,10 +67,8 @@ export default function ChatInput({
       return;
     }
 
-    // Reset height first so shrinking works
     textarea.style.height = "auto";
 
-    // Maximum height
     const maxHeight = 200;
 
     const newHeight = Math.min(
@@ -59,14 +79,12 @@ export default function ChatInput({
     textarea.style.height =
       `${newHeight}px`;
 
-    // Enable scrolling only after max height
     textarea.style.overflowY =
       textarea.scrollHeight > maxHeight
         ? "auto"
         : "hidden";
   }
 
-  // Resize whenever text changes
   useEffect(() => {
     resizeTextarea();
   }, [text]);
@@ -86,16 +104,17 @@ export default function ChatInput({
     onSend(
       cleanText,
       file,
+      stackOverflowEnabled,
     );
 
     setText("");
+
     setFile(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
 
-    // Reset textarea after sending
     requestAnimationFrame(() => {
       const textarea =
         textInputRef.current;
@@ -104,8 +123,7 @@ export default function ChatInput({
         return;
       }
 
-      textarea.style.height =
-        "auto";
+      textarea.style.height = "auto";
 
       textarea.style.overflowY =
         "hidden";
@@ -121,7 +139,6 @@ export default function ChatInput({
   ) {
     setText(event.target.value);
 
-    // Resize immediately for typing/pasting
     requestAnimationFrame(() => {
       resizeTextarea();
     });
@@ -134,9 +151,6 @@ export default function ChatInput({
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
-    // Enter = send
-    // Shift + Enter = new line
-
     if (
       event.key === "Enter" &&
       !event.shiftKey
@@ -149,9 +163,6 @@ export default function ChatInput({
 
       return;
     }
-
-    // Shift + Enter
-    // Let browser insert newline normally
   }
 
   // ==========================================
@@ -172,6 +183,7 @@ export default function ChatInput({
       onSend(
         cleanTranscript,
         null,
+        stackOverflowEnabled,
       );
 
       return;
@@ -190,6 +202,7 @@ export default function ChatInput({
 
     requestAnimationFrame(() => {
       textInputRef.current?.focus();
+
       resizeTextarea();
     });
   }
@@ -208,7 +221,6 @@ export default function ChatInput({
       return;
     }
 
-    // PDF only
     if (
       selectedFile.type !==
       "application/pdf"
@@ -222,7 +234,6 @@ export default function ChatInput({
       return;
     }
 
-    // 10 MB limit
     const maxSize =
       10 * 1024 * 1024;
 
@@ -241,7 +252,6 @@ export default function ChatInput({
 
     setFile(selectedFile);
 
-    // Focus textarea
     requestAnimationFrame(() => {
       textInputRef.current?.focus();
     });
@@ -260,6 +270,10 @@ export default function ChatInput({
 
     textInputRef.current?.focus();
   }
+
+  // ==========================================
+  // UI
+  // ==========================================
 
   return (
     <div className="pt-2 pb-3 bg-[#1e1e1e]">
@@ -320,11 +334,12 @@ export default function ChatInput({
         )}
 
         {/* ======================================
-            CHAT INPUT
+            INPUT CONTAINER
         ====================================== */}
 
         <div
           className="
+            relative
             flex
             gap-2
             items-end
@@ -340,7 +355,7 @@ export default function ChatInput({
         >
 
           {/* ====================================
-              PDF INPUT
+              PDF
           ==================================== */}
 
           <input
@@ -371,14 +386,213 @@ export default function ChatInput({
               hover:text-white
               transition
               disabled:opacity-40
-              disabled:cursor-not-allowed
             "
           >
             <Plus size={22} />
           </button>
 
           {/* ====================================
-              AUTO GROW TEXTAREA
+              PLUGIN BUTTON
+          ==================================== */}
+
+          <button
+            type="button"
+            onClick={() =>
+              setPluginOpen(
+                (current) => !current,
+              )
+            }
+            disabled={loading}
+            title="Plugins"
+            className={`
+              flex
+              items-center
+              justify-center
+              gap-1
+              h-9
+              px-2
+              shrink-0
+              rounded-lg
+              transition
+              text-sm
+
+              ${
+                stackOverflowEnabled
+                  ? "bg-[#404040] text-white"
+                  : "text-gray-300 hover:bg-[#404040] hover:text-white"
+              }
+
+              disabled:opacity-40
+            `}
+          >
+            <Plug size={17} />
+
+            <ChevronDown
+              size={14}
+              className={`
+                transition-transform
+                ${
+                  pluginOpen
+                    ? "rotate-180"
+                    : ""
+                }
+              `}
+            />
+          </button>
+
+          {/* ====================================
+              PLUGIN POPOVER
+          ==================================== */}
+
+          {pluginOpen && (
+            <div
+              className="
+                absolute
+                bottom-full
+                left-2
+                mb-2
+                w-72
+                rounded-xl
+                border
+                border-[#3f3f3f]
+                bg-[#252525]
+                shadow-2xl
+                overflow-hidden
+                z-50
+              "
+            >
+
+              {/* Header */}
+
+              <div
+                className="
+                  px-4
+                  py-3
+                  border-b
+                  border-[#3a3a3a]
+                "
+              >
+                <p className="text-sm font-medium text-white">
+                  Plugins
+                </p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Give CacheAI access to useful tools.
+                </p>
+              </div>
+
+              {/* Stack Overflow */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setStackOverflowEnabled(
+                    (current) => !current,
+                  )
+                }
+                className="
+                  w-full
+                  flex
+                  items-center
+                  gap-3
+                  px-4
+                  py-3
+                  text-left
+                  hover:bg-[#303030]
+                  transition
+                "
+              >
+
+                {/* SO icon */}
+
+                <div
+                  className="
+                    h-9
+                    w-9
+                    shrink-0
+                    rounded-lg
+                    bg-[#f48024]
+                    flex
+                    items-center
+                    justify-center
+                    text-white
+                    text-xs
+                    font-bold
+                  "
+                >
+                  SO
+                </div>
+
+                {/* Information */}
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-medium">
+                    Stack Overflow
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    Search developer questions
+                  </p>
+                </div>
+
+                {/* Toggle */}
+
+                <div
+                  className={`
+                    relative
+                    w-9
+                    h-5
+                    rounded-full
+                    transition
+
+                    ${
+                      stackOverflowEnabled
+                        ? "bg-orange-500"
+                        : "bg-[#4a4a4a]"
+                    }
+                  `}
+                >
+                  <div
+                    className={`
+                      absolute
+                      top-0.5
+                      h-4
+                      w-4
+                      rounded-full
+                      bg-white
+                      transition-all
+
+                      ${
+                        stackOverflowEnabled
+                          ? "left-[18px]"
+                          : "left-0.5"
+                      }
+                    `}
+                  />
+                </div>
+              </button>
+
+              {/* Footer */}
+
+              <div
+                className="
+                  px-4
+                  py-2
+                  border-t
+                  border-[#3a3a3a]
+                "
+              >
+                <p className="text-[11px] text-gray-500">
+                  {stackOverflowEnabled
+                    ? "Stack Overflow is enabled for this message."
+                    : "No plugins enabled."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ====================================
+              TEXTAREA
           ==================================== */}
 
           <textarea
@@ -393,7 +607,7 @@ export default function ChatInput({
                 ? "Ask something about this PDF..."
                 : voiceMode
                   ? "Voice mode is active..."
-                  : "Message AI..."
+                  : "Message CacheAI..."
             }
             className="
               flex-1
@@ -409,10 +623,6 @@ export default function ChatInput({
               placeholder:text-gray-500
               max-h-[200px]
               overflow-y-hidden
-
-              scrollbar-thin
-              scrollbar-thumb-[#555]
-              scrollbar-track-transparent
             "
           />
 
@@ -450,7 +660,6 @@ export default function ChatInput({
               }
 
               disabled:opacity-40
-              disabled:cursor-not-allowed
             `}
           >
             <AudioLines size={18} />
@@ -498,11 +707,10 @@ export default function ChatInput({
           >
             <Send size={18} />
           </button>
-
         </div>
 
         {/* ======================================
-            HELPER TEXT
+            HELPER
         ====================================== */}
 
         <p
@@ -515,7 +723,6 @@ export default function ChatInput({
         >
           Enter to send · Shift + Enter for new line
         </p>
-
       </div>
     </div>
   );

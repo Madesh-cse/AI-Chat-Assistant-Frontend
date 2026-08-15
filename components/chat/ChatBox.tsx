@@ -131,7 +131,14 @@ export default function ChatBox() {
 
   // SEND
 
-  async function handleSend(text: string, file: File | null = null) {
+  async function handleSend(
+    text: string,
+    file: File | null = null,
+    stackOverflowEnabled: boolean,
+  ) {
+    console.log("Message:", text);
+    console.log("File:", file);
+    console.log("Stack Overflow:", stackOverflowEnabled);
     if (loading) {
       return;
     }
@@ -417,7 +424,12 @@ You can now ask questions about this PDF.
 
         <ChatArea messages={messages} loading={loading} voiceMode={voiceMode} />
 
-        <ChatInput onSend={handleSend} loading={loading}  voiceMode={voiceMode} onVoiceModeChange={setVoiceMode} />
+        <ChatInput
+          onSend={handleSend}
+          loading={loading}
+          voiceMode={voiceMode}
+          onVoiceModeChange={setVoiceMode}
+        />
       </main>
     </div>
   );
