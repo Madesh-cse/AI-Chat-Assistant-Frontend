@@ -7,6 +7,10 @@ import {
   Settings,
   PanelLeftClose,
   Trash2,
+  FolderKanban,
+  CalendarClock,
+  Plug,
+  FileBox,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -26,8 +30,8 @@ export default function Sidebar() {
   } = useChatStore();
 
   const [creatingChat, setCreatingChat] = useState(false);
-  const [deletingChatId, setDeletingChatId] = useState<number | null>(null);
 
+  const [deletingChatId, setDeletingChatId] = useState<number | null>(null);
 
   useEffect(() => {
     loadConversations();
@@ -53,7 +57,6 @@ export default function Sidebar() {
     event: React.MouseEvent<HTMLButtonElement>,
     id: number,
   ) {
-    // Prevent conversation selection
     event.stopPropagation();
 
     if (deletingChatId !== null) {
@@ -71,10 +74,8 @@ export default function Sidebar() {
     setDeletingChatId(id);
 
     try {
-      // Delete from PostgreSQL
       await deleteConversation(id);
 
-      // Delete from Zustand
       deleteChat(id);
     } catch (error) {
       console.error("Failed to delete conversation:", error);
@@ -96,7 +97,6 @@ export default function Sidebar() {
         border-[#2f2f2f]
       "
     >
-
       <div className="p-3">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -113,12 +113,10 @@ export default function Sidebar() {
                 text-sm
               "
             >
-              AI
+              C
             </div>
 
-            <span className="font-semibold text-sm">
-              AI Assistant
-            </span>
+            <span className="font-semibold text-sm">CacheAI</span>
           </div>
 
           <button
@@ -136,7 +134,6 @@ export default function Sidebar() {
             <PanelLeftClose size={18} />
           </button>
         </div>
-
         <button
           type="button"
           onClick={handleCreateChat}
@@ -160,10 +157,84 @@ export default function Sidebar() {
         >
           <Plus size={18} />
 
-          <span>
-            {creatingChat ? "Creating..." : "New chat"}
-          </span>
+          <span>{creatingChat ? "Creating..." : "New chat"}</span>
         </button>
+
+        <div className="mt-3 space-y-1">
+          <button
+            type="button"
+            className="
+              w-full
+              flex
+              items-center
+              gap-3
+              px-3
+              py-2.5
+              rounded-lg
+              text-sm
+              text-gray-300
+              hover:bg-[#242424]
+              hover:text-white
+              transition
+            "
+          >
+            <FolderKanban size={17} />
+
+            <span>Projects</span>
+          </button>
+
+          {/* Schedule */}
+
+          <button
+            type="button"
+            className="
+              w-full
+              flex
+              items-center
+              gap-3
+              px-3
+              py-2.5
+              rounded-lg
+              text-sm
+              text-gray-300
+              hover:bg-[#242424]
+              hover:text-white
+              transition
+            "
+          >
+            <CalendarClock size={17} />
+
+            <span>Schedule</span>
+          </button>
+
+          {/* Plugins */}
+
+          <button
+            type="button"
+            className="
+              w-full
+              flex
+              items-center
+              gap-3
+              px-3
+              py-2.5
+              rounded-lg
+              text-sm
+              text-gray-300
+              hover:bg-[#242424]
+              hover:text-white
+              transition
+            "
+          >
+            <Plug size={17} />
+
+            <span>Plugins</span>
+          </button>
+        </div>
+
+        {/* =========================================
+            SEARCH
+        ========================================= */}
 
         <button
           type="button"
@@ -186,9 +257,7 @@ export default function Sidebar() {
 
           <span>Search chats</span>
 
-          <span className="ml-auto text-xs text-gray-500">
-            Ctrl K
-          </span>
+          <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
         </button>
       </div>
 
@@ -218,20 +287,17 @@ export default function Sidebar() {
           </div>
         )}
 
-        {!loadingConversations &&
-          conversations.length === 0 && (
-            <div className="px-3 py-3 text-sm text-gray-500">
-              No conversations yet.
-            </div>
-          )}
+        {!loadingConversations && conversations.length === 0 && (
+          <div className="px-3 py-3 text-sm text-gray-500">
+            No conversations yet.
+          </div>
+        )}
 
         <div className="space-y-1">
           {conversations.map((chat) => {
-            const isActive =
-              activeConversation === chat.id;
+            const isActive = activeConversation === chat.id;
 
-            const isDeleting =
-              deletingChatId === chat.id;
+            const isDeleting = deletingChatId === chat.id;
 
             return (
               <div
@@ -244,20 +310,15 @@ export default function Sidebar() {
                   rounded-lg
                   transition
 
-                  ${
-                    isActive
-                      ? "bg-[#2a2a2a]"
-                      : "hover:bg-[#242424]"
-                  }
+                  ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#242424]"}
                 `}
               >
+                {/* Conversation */}
 
                 <button
                   type="button"
                   disabled={isDeleting}
-                  onClick={() =>
-                    setActiveChat(chat.id)
-                  }
+                  onClick={() => setActiveChat(chat.id)}
                   className={`
                     flex
                     items-center
@@ -278,25 +339,17 @@ export default function Sidebar() {
                     }
                   `}
                 >
-                  <MessageSquare
-                    size={16}
-                    className="shrink-0"
-                  />
+                  <MessageSquare size={16} className="shrink-0" />
 
-                  <span className="truncate">
-                    {chat.title || "New chat"}
-                  </span>
+                  <span className="truncate">{chat.title || "New chat"}</span>
                 </button>
+
+                {/* Delete */}
 
                 <button
                   type="button"
                   disabled={isDeleting}
-                  onClick={(event) =>
-                    handleDeleteChat(
-                      event,
-                      chat.id,
-                    )
-                  }
+                  onClick={(event) => handleDeleteChat(event, chat.id)}
                   title="Delete conversation"
                   className="
                     shrink-0
@@ -313,9 +366,7 @@ export default function Sidebar() {
                   "
                 >
                   {isDeleting ? (
-                    <span className="text-xs">
-                      ...
-                    </span>
+                    <span className="text-xs">...</span>
                   ) : (
                     <Trash2 size={15} />
                   )}
@@ -325,6 +376,11 @@ export default function Sidebar() {
           })}
         </div>
       </div>
+
+      {/* =========================================
+          BOTTOM
+      ========================================= */}
+
       <div
         className="
           p-3
@@ -332,76 +388,84 @@ export default function Sidebar() {
           border-[#2f2f2f]
         "
       >
-        {/* Ollama */}
-
         <div
           className="
-            flex
-            items-center
-            gap-3
-            px-3
-            py-3
-            rounded-lg
-            hover:bg-[#242424]
-            transition
-            cursor-pointer
-          "
+    px-2
+    py-2
+    border-t
+    border-[#2f2f2f]
+  "
         >
+          {/* AI MODEL */}
+
           <div
             className="
-              h-8
-              w-8
-              rounded-full
-              bg-[#303030]
-              flex
-              items-center
-              justify-center
-              text-xs
-              font-semibold
-            "
+      flex
+      items-center
+      gap-2.5
+      px-2
+      py-2
+      rounded-lg
+      hover:bg-[#242424]
+      transition
+      cursor-pointer
+    "
           >
-            AI
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">
-              Ollama
-            </p>
-
-            <p
+            <div
               className="
-                text-xs
-                text-gray-500
-                truncate
-              "
+        h-7
+        w-7
+        shrink-0
+        rounded-full
+        bg-[#303030]
+        flex
+        items-center
+        justify-center
+        text-[11px]
+        font-semibold
+      "
             >
-              qwen2.5:3b
-            </p>
+              C
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-200">CacheAI</p>
+
+              <p
+                className="
+          text-[11px]
+          text-gray-500
+          truncate
+        "
+              >
+                qwen2.5:3b • Ollama
+              </p>
+            </div>
           </div>
+
+          {/* SETTINGS */}
+
+          <button
+            type="button"
+            className="
+      w-full
+      flex
+      items-center
+      gap-2.5
+      px-2
+      py-2
+      rounded-lg
+      hover:bg-[#242424]
+      transition
+      text-xs
+      text-gray-400
+    "
+          >
+            <Settings size={15} />
+
+            <span>Settings</span>
+          </button>
         </div>
-
-        {/* Settings */}
-
-        <button
-          type="button"
-          className="
-            w-full
-            flex
-            items-center
-            gap-3
-            px-3
-            py-3
-            rounded-lg
-            hover:bg-[#242424]
-            transition
-            text-sm
-            text-gray-400
-          "
-        >
-          <Settings size={17} />
-
-          <span>Settings</span>
-        </button>
       </div>
     </aside>
   );
