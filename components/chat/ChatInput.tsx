@@ -39,10 +39,6 @@ export default function ChatInput({
   const [file, setFile] =
     useState<File | null>(null);
 
-  // ==========================================
-  // PLUGINS
-  // ==========================================
-
   const [pluginOpen, setPluginOpen] =
     useState(false);
 
@@ -54,10 +50,6 @@ export default function ChatInput({
 
   const textInputRef =
     useRef<HTMLTextAreaElement>(null);
-
-  // ==========================================
-  // AUTO RESIZE
-  // ==========================================
 
   function resizeTextarea() {
     const textarea =
@@ -88,10 +80,6 @@ export default function ChatInput({
   useEffect(() => {
     resizeTextarea();
   }, [text]);
-
-  // ==========================================
-  // SUBMIT
-  // ==========================================
 
   function submit() {
     const cleanText =
@@ -130,10 +118,6 @@ export default function ChatInput({
     });
   }
 
-  // ==========================================
-  // TEXT CHANGE
-  // ==========================================
-
   function handleTextChange(
     event: React.ChangeEvent<HTMLTextAreaElement>,
   ) {
@@ -144,9 +128,6 @@ export default function ChatInput({
     });
   }
 
-  // ==========================================
-  // KEYBOARD
-  // ==========================================
 
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
@@ -164,10 +145,6 @@ export default function ChatInput({
       return;
     }
   }
-
-  // ==========================================
-  // VOICE TRANSCRIPT
-  // ==========================================
 
   function handleVoiceTranscript(
     transcript: string,
@@ -206,10 +183,6 @@ export default function ChatInput({
       resizeTextarea();
     });
   }
-
-  // ==========================================
-  // FILE CHANGE
-  // ==========================================
 
   function handleFileChange(
     event: React.ChangeEvent<HTMLInputElement>,
@@ -257,10 +230,6 @@ export default function ChatInput({
     });
   }
 
-  // ==========================================
-  // REMOVE FILE
-  // ==========================================
-
   function removeFile() {
     setFile(null);
 
@@ -271,18 +240,10 @@ export default function ChatInput({
     textInputRef.current?.focus();
   }
 
-  // ==========================================
-  // UI
-  // ==========================================
 
   return (
-    <div className="pt-2 pb-3 bg-[#1e1e1e]">
+    <div className="bg-[#1e1e1e]">
       <div className="max-w-3xl mx-auto px-3">
-
-        {/* ======================================
-            FILE PREVIEW
-        ====================================== */}
-
         {file && (
           <div className="mb-2">
             <div
@@ -333,10 +294,6 @@ export default function ChatInput({
           </div>
         )}
 
-        {/* ======================================
-            INPUT CONTAINER
-        ====================================== */}
-
         <div
           className="
             relative
@@ -353,10 +310,6 @@ export default function ChatInput({
             transition
           "
         >
-
-          {/* ====================================
-              PDF
-          ==================================== */}
 
           <input
             ref={fileInputRef}
@@ -390,10 +343,6 @@ export default function ChatInput({
           >
             <Plus size={22} />
           </button>
-
-          {/* ====================================
-              PLUGIN BUTTON
-          ==================================== */}
 
           <button
             type="button"
@@ -439,10 +388,6 @@ export default function ChatInput({
               `}
             />
           </button>
-
-          {/* ====================================
-              PLUGIN POPOVER
-          ==================================== */}
 
           {pluginOpen && (
             <div
@@ -591,10 +536,6 @@ export default function ChatInput({
             </div>
           )}
 
-          {/* ====================================
-              TEXTAREA
-          ==================================== */}
-
           <textarea
             ref={textInputRef}
             value={text}
@@ -625,10 +566,6 @@ export default function ChatInput({
               overflow-y-hidden
             "
           />
-
-          {/* ====================================
-              VOICE MODE
-          ==================================== */}
 
           <button
             type="button"
@@ -665,10 +602,6 @@ export default function ChatInput({
             <AudioLines size={18} />
           </button>
 
-          {/* ====================================
-              MICROPHONE
-          ==================================== */}
-
           <VoiceButton
             onTranscript={
               handleVoiceTranscript
@@ -676,10 +609,6 @@ export default function ChatInput({
             disabled={loading}
             autoStart={voiceMode}
           />
-
-          {/* ====================================
-              SEND
-          ==================================== */}
 
           <button
             type="button"
@@ -708,10 +637,6 @@ export default function ChatInput({
             <Send size={18} />
           </button>
         </div>
-
-        {/* ======================================
-            HELPER
-        ====================================== */}
 
         <p
           className="

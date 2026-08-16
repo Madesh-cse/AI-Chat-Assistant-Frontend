@@ -19,7 +19,6 @@ export default function ChatArea({ messages, loading, voiceMode,}: Props) {
       className="
         flex-1
         overflow-y-auto
-         bg-[#1e1e1e]
       "
     >
       {/* Chat Container */}

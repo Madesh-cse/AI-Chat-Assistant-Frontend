@@ -418,7 +418,7 @@ export default function Sidebar() {
               items-center
               gap-3
               px-3
-              py-2.5
+              py-2
               rounded-lg
               text-sm
               text-gray-300
@@ -442,7 +442,7 @@ export default function Sidebar() {
               items-center
               gap-3
               px-3
-              py-2.5
+              py-2
               rounded-lg
               text-sm
               text-gray-300
@@ -469,7 +469,7 @@ export default function Sidebar() {
               items-center
               gap-3
               px-3
-              py-2.5
+              py-2
               rounded-lg
               text-sm
               transition
