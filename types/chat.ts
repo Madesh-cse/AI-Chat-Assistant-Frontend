@@ -14,6 +14,7 @@ export interface Conversation {
   id: number;
   title: string;
   user_id?: number;
+  is_pinned: boolean;
   created_at?: string;
   updated_at?: string;
   messages: Message[];

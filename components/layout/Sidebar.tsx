@@ -10,12 +10,19 @@ import {
   FolderKanban,
   CalendarClock,
   Plug,
+  Pin,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
 import { useChatStore } from "@/store/chatStore";
-import { deleteConversation } from "@/services/chat";
+import {
+  deleteConversation,
+} from "@/services/chat";
+
+import {
+  togglePinConversation,
+} from "@/services/conversation";
 
 import PluginPanel from "@/components/plugins/PluginPanel";
 
@@ -28,13 +35,16 @@ export default function Sidebar() {
     deleteChat,
     loadConversations,
     loadingConversations,
+    togglePinChat,
   } = useChatStore();
 
   const [creatingChat, setCreatingChat] = useState(false);
 
-  const [deletingChatId, setDeletingChatId] = useState<number | null>(null);
+  const [deletingChatId, setDeletingChatId] =
+    useState<number | null>(null);
 
-  const [showPlugins, setShowPlugins] = useState(false);
+  const [showPlugins, setShowPlugins] =
+    useState(false);
 
   // =========================================
   // LOAD CONVERSATIONS
@@ -58,7 +68,10 @@ export default function Sidebar() {
     try {
       await createChat();
     } catch (error) {
-      console.error("Failed to create chat:", error);
+      console.error(
+        "Failed to create chat:",
+        error,
+      );
     } finally {
       setCreatingChat(false);
     }
@@ -72,7 +85,6 @@ export default function Sidebar() {
     event: React.MouseEvent<HTMLButtonElement>,
     id: number,
   ) {
-    // Prevent selecting the conversation
     event.stopPropagation();
 
     if (deletingChatId !== null) {
@@ -90,16 +102,201 @@ export default function Sidebar() {
     setDeletingChatId(id);
 
     try {
-      // Delete from PostgreSQL
       await deleteConversation(id);
 
-      // Delete from Zustand
       deleteChat(id);
     } catch (error) {
-      console.error("Failed to delete conversation:", error);
+      console.error(
+        "Failed to delete conversation:",
+        error,
+      );
     } finally {
       setDeletingChatId(null);
     }
+  }
+
+  // =========================================
+  // TOGGLE PIN
+  // =========================================
+
+  async function handleTogglePin(
+    event: React.MouseEvent<HTMLButtonElement>,
+    id: number,
+  ) {
+    event.stopPropagation();
+
+    try {
+      await togglePinChat(id);
+    } catch (error) {
+      console.error(
+        "Failed to pin conversation:",
+        error,
+      );
+    }
+  }
+
+  // =========================================
+  // SPLIT CONVERSATIONS
+  // =========================================
+
+  const pinnedConversations =
+    conversations.filter(
+      (chat) => chat.is_pinned,
+    );
+
+  const normalConversations =
+    conversations.filter(
+      (chat) => !chat.is_pinned,
+    );
+
+  // =========================================
+  // CONVERSATION ITEM
+  // =========================================
+
+  function renderConversation(
+    chat: (typeof conversations)[number],
+  ) {
+    const isActive =
+      activeConversation === chat.id;
+
+    const isDeleting =
+      deletingChatId === chat.id;
+
+    return (
+      <div
+        key={chat.id}
+        className={`
+          group
+          w-full
+          flex
+          items-center
+          rounded-lg
+          transition
+
+          ${
+            isActive
+              ? "bg-[#2a2a2a]"
+              : "hover:bg-[#242424]"
+          }
+        `}
+      >
+        {/* Conversation */}
+
+        <button
+          type="button"
+          disabled={isDeleting}
+          onClick={() =>
+            setActiveChat(chat.id)
+          }
+          className={`
+            flex
+            items-center
+            gap-3
+            min-w-0
+            flex-1
+            text-left
+            px-3
+            py-2.5
+            text-sm
+            transition
+            disabled:opacity-50
+
+            ${
+              isActive
+                ? "text-white"
+                : "text-gray-400 group-hover:text-gray-200"
+            }
+          `}
+        >
+          <MessageSquare
+            size={16}
+            className="shrink-0"
+          />
+
+          <span className="truncate">
+            {chat.title || "New chat"}
+          </span>
+        </button>
+
+        {/* Pin */}
+
+        <button
+          type="button"
+          disabled={isDeleting}
+          onClick={(event) =>
+            handleTogglePin(
+              event,
+              chat.id,
+            )
+          }
+          title={
+            chat.is_pinned
+              ? "Unpin conversation"
+              : "Pin conversation"
+          }
+          className={`
+            shrink-0
+            p-2
+            rounded-md
+            transition
+
+            ${
+              chat.is_pinned
+                ? "text-white opacity-100"
+                : "text-gray-500 opacity-0 group-hover:opacity-100"
+            }
+
+            hover:bg-[#3a3a3a]
+            hover:text-white
+            disabled:opacity-50
+          `}
+        >
+          <Pin
+            size={14}
+            className={
+              chat.is_pinned
+                ? "fill-current"
+                : ""
+            }
+          />
+        </button>
+
+        {/* Delete */}
+
+        <button
+          type="button"
+          disabled={isDeleting}
+          onClick={(event) =>
+            handleDeleteChat(
+              event,
+              chat.id,
+            )
+          }
+          title="Delete conversation"
+          className="
+            shrink-0
+            mr-1
+            p-2
+            rounded-md
+            text-gray-500
+            opacity-0
+            group-hover:opacity-100
+            hover:bg-[#3a3a3a]
+            hover:text-red-400
+            disabled:opacity-50
+            transition
+          "
+        >
+          {isDeleting ? (
+            <span className="text-xs">
+              ...
+            </span>
+          ) : (
+            <Trash2 size={15} />
+          )}
+        </button>
+      </div>
+    );
   }
 
   // =========================================
@@ -121,11 +318,12 @@ export default function Sidebar() {
       "
     >
       {/* =========================================
-          TOP SECTION
+          TOP
       ========================================= */}
 
       <div className="p-3">
-        {/* BRAND HEADER */}
+
+        {/* BRAND */}
 
         <div
           className="
@@ -136,7 +334,6 @@ export default function Sidebar() {
           "
         >
           <div className="flex items-center gap-2">
-            {/* Logo */}
 
             <div
               className="
@@ -154,12 +351,10 @@ export default function Sidebar() {
               C
             </div>
 
-            {/* Name */}
-
-            <span className="font-semibold text-sm">CacheAI</span>
+            <span className="font-semibold text-sm">
+              CacheAI
+            </span>
           </div>
-
-          {/* Collapse */}
 
           <button
             type="button"
@@ -177,9 +372,7 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* =========================================
-            NEW CHAT
-        ========================================= */}
+        {/* NEW CHAT */}
 
         <button
           type="button"
@@ -204,14 +397,17 @@ export default function Sidebar() {
         >
           <Plus size={18} />
 
-          <span>{creatingChat ? "Creating..." : "New chat"}</span>
+          <span>
+            {creatingChat
+              ? "Creating..."
+              : "New chat"}
+          </span>
         </button>
 
-        {/* =========================================
-            NAVIGATION
-        ========================================= */}
+        {/* NAVIGATION */}
 
         <div className="mt-3 space-y-1">
+
           {/* PROJECTS */}
 
           <button
@@ -264,7 +460,9 @@ export default function Sidebar() {
 
           <button
             type="button"
-            onClick={() => setShowPlugins(true)}
+            onClick={() =>
+              setShowPlugins(true)
+            }
             className={`
               w-full
               flex
@@ -289,9 +487,7 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* =========================================
-            SEARCH
-        ========================================= */}
+        {/* SEARCH */}
 
         <button
           type="button"
@@ -314,7 +510,9 @@ export default function Sidebar() {
 
           <span>Search chats</span>
 
-          <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
+          <span className="ml-auto text-xs text-gray-500">
+            Ctrl K
+          </span>
         </button>
       </div>
 
@@ -330,124 +528,83 @@ export default function Sidebar() {
           chat-scroll
         "
       >
-        {/* Section title */}
 
-        <p
-          className="
-            px-3
-            py-2
-            text-xs
-            font-medium
-            text-gray-500
-          "
-        >
-          Chats
-        </p>
+        {/* =====================================
+            PINNED
+        ===================================== */}
 
-        {/* Loading */}
+        {pinnedConversations.length > 0 && (
+          <div className="mb-4">
 
-        {loadingConversations && (
-          <div className="px-3 py-3 text-sm text-gray-500">
-            Loading conversations...
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                px-3
+                py-2
+                text-xs
+                font-medium
+                text-gray-500
+              "
+            >
+              <Pin
+                size={13}
+                className="fill-current"
+              />
+
+              <span>Pinned</span>
+            </div>
+
+            <div className="space-y-1">
+              {pinnedConversations.map(
+                renderConversation,
+              )}
+            </div>
           </div>
         )}
 
-        {/* Empty */}
+        {/* =====================================
+            CHATS
+        ===================================== */}
 
-        {!loadingConversations && conversations.length === 0 && (
-          <div className="px-3 py-3 text-sm text-gray-500">
-            No conversations yet.
-          </div>
-        )}
+        <div>
 
-        {/* Conversation list */}
+          <p
+            className="
+              px-3
+              py-2
+              text-xs
+              font-medium
+              text-gray-500
+            "
+          >
+            Chats
+          </p>
 
-        <div className="space-y-1">
-          {conversations.map((chat) => {
-            const isActive = activeConversation === chat.id;
+          {loadingConversations && (
+            <div className="px-3 py-3 text-sm text-gray-500">
+              Loading conversations...
+            </div>
+          )}
 
-            const isDeleting = deletingChatId === chat.id;
-
-            return (
-              <div
-                key={chat.id}
-                className={`
-                  group
-                  w-full
-                  flex
-                  items-center
-                  rounded-lg
-                  transition
-
-                  ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#242424]"}
-                `}
-              >
-                {/* Conversation */}
-
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={() => setActiveChat(chat.id)}
-                  className={`
-                    flex
-                    items-center
-                    gap-3
-                    min-w-0
-                    flex-1
-                    text-left
-                    px-3
-                    py-2.5
-                    text-sm
-                    transition
-                    disabled:opacity-50
-
-                    ${
-                      isActive
-                        ? "text-white"
-                        : "text-gray-400 group-hover:text-gray-200"
-                    }
-                  `}
-                >
-                  <MessageSquare size={16} className="shrink-0" />
-
-                  <span className="truncate">{chat.title || "New chat"}</span>
-                </button>
-
-                {/* Delete */}
-
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={(event) => handleDeleteChat(event, chat.id)}
-                  title="Delete conversation"
-                  className="
-                    shrink-0
-                    mr-1
-                    p-2
-                    rounded-md
-                    text-gray-500
-                    opacity-0
-                    group-hover:opacity-100
-                    hover:bg-[#3a3a3a]
-                    hover:text-red-400
-                    disabled:opacity-50
-                    transition
-                  "
-                >
-                  {isDeleting ? (
-                    <span className="text-xs">...</span>
-                  ) : (
-                    <Trash2 size={15} />
-                  )}
-                </button>
+          {!loadingConversations &&
+            normalConversations.length === 0 && (
+              <div className="px-3 py-3 text-sm text-gray-500">
+                No conversations yet.
               </div>
-            );
-          })}
+            )}
+
+          <div className="space-y-1">
+            {normalConversations.map(
+              renderConversation,
+            )}
+          </div>
         </div>
       </div>
 
       {/* =========================================
-          BOTTOM SECTION
+          BOTTOM
       ========================================= */}
 
       <div
@@ -457,9 +614,8 @@ export default function Sidebar() {
           border-[#2f2f2f]
         "
       >
-        {/* =========================================
-            AI MODEL
-        ========================================= */}
+
+        {/* AI MODEL */}
 
         <div
           className="
@@ -474,45 +630,9 @@ export default function Sidebar() {
             cursor-pointer
           "
         >
-          {/* Avatar */}
-
-          <div
-            className="
-              h-7
-              w-7
-              shrink-0
-              rounded-full
-              bg-[#303030]
-              flex
-              items-center
-              justify-center
-              text-[11px]
-              font-semibold
-            "
-          >
-            C
-          </div>
-
-          {/* Model information */}
-
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-gray-200">CacheAI</p>
-
-            <p
-              className="
-                text-[11px]
-                text-gray-500
-                truncate
-              "
-            >
-              qwen2.5:3b • Ollama
-            </p>
-          </div>
         </div>
 
-        {/* =========================================
-            SETTINGS
-        ========================================= */}
+        {/* SETTINGS */}
 
         <button
           type="button"
@@ -536,11 +656,15 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* =========================================
-          PLUGIN PANEL
-      ========================================= */}
+      {/* PLUGIN PANEL */}
 
-      {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
+      {showPlugins && (
+        <PluginPanel
+          onClose={() =>
+            setShowPlugins(false)
+          }
+        />
+      )}
     </aside>
   );
 }

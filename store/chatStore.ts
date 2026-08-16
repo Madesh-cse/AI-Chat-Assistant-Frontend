@@ -2,39 +2,31 @@ import { create } from "zustand";
 
 import { Conversation, Message } from "@/types/chat";
 
+
 import {
   createConversation,
   getConversations,
   getConversation,
   updateConversationTitle,
+  togglePinConversation,
 } from "@/services/conversation";
 
 interface ChatStore {
   conversations: Conversation[];
-
   activeConversation: number | null;
-
   loadingConversations: boolean;
-
   createChat: () => Promise<void>;
-
   loadConversations: () => Promise<void>;
-
   selectConversation: (id: number) => Promise<void>;
-
   setActiveChat: (id: number) => void;
-
   deleteChat: (id: number) => void;
-
+  togglePinChat: (id: number) => Promise<void>;
   addMessage: (message: Message) => void;
-
   updateChatTitle: (id: number, title: string) => void;
-
   updateMessage: (messageId: number, content: string) => void;
-
   replaceMessage: (messageId: number, content: string) => void;
-
   clearMessage: (messageId: number) => void;
+  
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -279,5 +271,31 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         activeConversation,
       };
     });
+  },
+
+  // Pin the chat
+  togglePinChat: async (id: number) => {
+    const result = await togglePinConversation(id);
+
+    set((state) => ({
+      conversations: state.conversations
+        .map((chat) =>
+          chat.id === id
+            ? {
+                ...chat,
+                is_pinned: result.is_pinned,
+              }
+            : chat,
+        )
+        .sort((a, b) => {
+          if (a.is_pinned && !b.is_pinned) return -1;
+          if (!a.is_pinned && b.is_pinned) return 1;
+
+          return (
+            new Date(b.updated_at || "").getTime() -
+            new Date(a.updated_at || "").getTime()
+          );
+        }),
+    }));
   },
 }));

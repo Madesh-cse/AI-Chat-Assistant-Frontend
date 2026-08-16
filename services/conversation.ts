@@ -132,6 +132,43 @@ export async function updateConversationTitle(
 
   return response.json();
 }
+
+// PIN CHAT
+export async function togglePinConversation(
+  conversationId: number,
+): Promise<{
+  id: number;
+  is_pinned: boolean;
+}> {
+  const response = await fetch(
+    `${API_URL}/conversations/${conversationId}/pin`,
+    {
+      method: "PATCH",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    let message = "Failed to update pinned conversation.";
+
+    try {
+      const data = await response.json();
+
+      if (typeof data.detail === "string") {
+        message = data.detail;
+      }
+    } catch {
+      // Ignore
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
 // DELETE CONVERSATION
 
 export async function deleteConversation(
@@ -157,3 +194,4 @@ export async function deleteConversation(
     throw new Error(message);
   }
 }
+
