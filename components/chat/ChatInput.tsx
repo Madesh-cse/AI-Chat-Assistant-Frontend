@@ -19,12 +19,11 @@ interface ChatInputProps {
     text: string,
     file: File | null,
     stackOverflowEnabled: boolean,
+    notionEnabled: boolean,
   ) => void;
 
   loading: boolean;
-
   voiceMode: boolean;
-
   onVoiceModeChange: (enabled: boolean) => void;
 }
 
@@ -35,25 +34,15 @@ export default function ChatInput({
   onVoiceModeChange,
 }: ChatInputProps) {
   const [text, setText] = useState("");
-
-  const [file, setFile] =
-    useState<File | null>(null);
-
-  const [pluginOpen, setPluginOpen] =
-    useState(false);
-
-  const [stackOverflowEnabled, setStackOverflowEnabled] =
-    useState(false);
-
-  const fileInputRef =
-    useRef<HTMLInputElement>(null);
-
-  const textInputRef =
-    useRef<HTMLTextAreaElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [pluginOpen, setPluginOpen] = useState(false);
+  const [stackOverflowEnabled, setStackOverflowEnabled] = useState(false);
+  const [notionEnabled, setnotionEnabled] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   function resizeTextarea() {
-    const textarea =
-      textInputRef.current;
+    const textarea = textInputRef.current;
 
     if (!textarea) {
       return;
@@ -63,18 +52,12 @@ export default function ChatInput({
 
     const maxHeight = 200;
 
-    const newHeight = Math.min(
-      textarea.scrollHeight,
-      maxHeight,
-    );
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
 
-    textarea.style.height =
-      `${newHeight}px`;
+    textarea.style.height = `${newHeight}px`;
 
     textarea.style.overflowY =
-      textarea.scrollHeight > maxHeight
-        ? "auto"
-        : "hidden";
+      textarea.scrollHeight > maxHeight ? "auto" : "hidden";
   }
 
   useEffect(() => {
@@ -82,18 +65,13 @@ export default function ChatInput({
   }, [text]);
 
   function submit() {
-    const cleanText =
-      text.trim();
+    const cleanText = text.trim();
 
     if (!cleanText && !file) {
       return;
     }
 
-    onSend(
-      cleanText,
-      file,
-      stackOverflowEnabled,
-    );
+    onSend(cleanText, file, stackOverflowEnabled, notionEnabled);
 
     setText("");
 
@@ -104,8 +82,7 @@ export default function ChatInput({
     }
 
     requestAnimationFrame(() => {
-      const textarea =
-        textInputRef.current;
+      const textarea = textInputRef.current;
 
       if (!textarea) {
         return;
@@ -113,14 +90,11 @@ export default function ChatInput({
 
       textarea.style.height = "auto";
 
-      textarea.style.overflowY =
-        "hidden";
+      textarea.style.overflowY = "hidden";
     });
   }
 
-  function handleTextChange(
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-  ) {
+  function handleTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setText(event.target.value);
 
     requestAnimationFrame(() => {
@@ -128,14 +102,8 @@ export default function ChatInput({
     });
   }
 
-
-  function handleKeyDown(
-    event: React.KeyboardEvent<HTMLTextAreaElement>,
-  ) {
-    if (
-      event.key === "Enter" &&
-      !event.shiftKey
-    ) {
+  function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
 
       if (!loading) {
@@ -146,29 +114,21 @@ export default function ChatInput({
     }
   }
 
-  function handleVoiceTranscript(
-    transcript: string,
-  ) {
-    const cleanTranscript =
-      transcript.trim();
+  function handleVoiceTranscript(transcript: string) {
+    const cleanTranscript = transcript.trim();
 
     if (!cleanTranscript) {
       return;
     }
 
     if (voiceMode) {
-      onSend(
-        cleanTranscript,
-        null,
-        stackOverflowEnabled,
-      );
+      onSend(cleanTranscript, null, stackOverflowEnabled, notionEnabled);
 
       return;
     }
 
     setText((currentText) => {
-      const current =
-        currentText.trim();
+      const current = currentText.trim();
 
       if (!current) {
         return cleanTranscript;
@@ -184,39 +144,25 @@ export default function ChatInput({
     });
   }
 
-  function handleFileChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const selectedFile =
-      event.target.files?.[0];
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0];
 
     if (!selectedFile) {
       return;
     }
 
-    if (
-      selectedFile.type !==
-      "application/pdf"
-    ) {
-      alert(
-        "Please upload a PDF file.",
-      );
+    if (selectedFile.type !== "application/pdf") {
+      alert("Please upload a PDF file.");
 
       event.target.value = "";
 
       return;
     }
 
-    const maxSize =
-      10 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024;
 
-    if (
-      selectedFile.size >
-      maxSize
-    ) {
-      alert(
-        "PDF must be smaller than 10 MB.",
-      );
+    if (selectedFile.size > maxSize) {
+      alert("PDF must be smaller than 10 MB.");
 
       event.target.value = "";
 
@@ -240,9 +186,8 @@ export default function ChatInput({
     textInputRef.current?.focus();
   }
 
-
   return (
-    <div className="bg-[#1e1e1e]">
+    <div className="bg-[#1e1e1e] pt-2">
       <div className="max-w-3xl mx-auto px-3">
         {file && (
           <div className="mb-2">
@@ -261,10 +206,7 @@ export default function ChatInput({
                 border-[#444]
               "
             >
-              <FileText
-                size={18}
-                className="text-gray-300"
-              />
+              <FileText size={18} className="text-gray-300" />
 
               <span
                 className="
@@ -310,7 +252,6 @@ export default function ChatInput({
             transition
           "
         >
-
           <input
             ref={fileInputRef}
             type="file"
@@ -321,9 +262,7 @@ export default function ChatInput({
 
           <button
             type="button"
-            onClick={() =>
-              fileInputRef.current?.click()
-            }
+            onClick={() => fileInputRef.current?.click()}
             disabled={loading}
             title="Upload PDF"
             className="
@@ -346,11 +285,7 @@ export default function ChatInput({
 
           <button
             type="button"
-            onClick={() =>
-              setPluginOpen(
-                (current) => !current,
-              )
-            }
+            onClick={() => setPluginOpen((current) => !current)}
             disabled={loading}
             title="Plugins"
             className={`
@@ -380,11 +315,7 @@ export default function ChatInput({
               size={14}
               className={`
                 transition-transform
-                ${
-                  pluginOpen
-                    ? "rotate-180"
-                    : ""
-                }
+                ${pluginOpen ? "rotate-180" : ""}
               `}
             />
           </button>
@@ -406,7 +337,6 @@ export default function ChatInput({
                 z-50
               "
             >
-
               {/* Header */}
 
               <div
@@ -417,9 +347,7 @@ export default function ChatInput({
                   border-[#3a3a3a]
                 "
               >
-                <p className="text-sm font-medium text-white">
-                  Plugins
-                </p>
+                <p className="text-sm font-medium text-white">Plugins</p>
 
                 <p className="text-xs text-gray-500 mt-1">
                   Give CacheAI access to useful tools.
@@ -430,11 +358,7 @@ export default function ChatInput({
 
               <button
                 type="button"
-                onClick={() =>
-                  setStackOverflowEnabled(
-                    (current) => !current,
-                  )
-                }
+                onClick={() => setStackOverflowEnabled((current) => !current)}
                 className="
                   w-full
                   flex
@@ -447,7 +371,6 @@ export default function ChatInput({
                   transition
                 "
               >
-
                 {/* SO icon */}
 
                 <div
@@ -490,11 +413,7 @@ export default function ChatInput({
                     rounded-full
                     transition
 
-                    ${
-                      stackOverflowEnabled
-                        ? "bg-orange-500"
-                        : "bg-[#4a4a4a]"
-                    }
+                    ${stackOverflowEnabled ? "bg-orange-500" : "bg-[#4a4a4a]"}
                   `}
                 >
                   <div
@@ -507,18 +426,87 @@ export default function ChatInput({
                       bg-white
                       transition-all
 
-                      ${
-                        stackOverflowEnabled
-                          ? "left-[18px]"
-                          : "left-0.5"
-                      }
+                      ${stackOverflowEnabled ? "left-[18px]" : "left-0.5"}
                     `}
                   />
                 </div>
               </button>
 
-              {/* Footer */}
+              {/* Notion Plugin */}
+              <button
+                type="button"
+                onClick={() => setnotionEnabled((current) => !current)}
+                className="
+    w-full
+    flex
+    items-center
+    gap-3
+    px-4
+    py-3
+    text-left
+    hover:bg-[#303030]
+    transition
+  "
+              >
+                {/* Notion icon */}
 
+                <div
+                  className="
+      h-9
+      w-9
+      shrink-0
+      rounded-lg
+      bg-white
+      flex
+      items-center
+      justify-center
+      text-black
+      text-sm
+      font-bold
+    "
+                >
+                  N
+                </div>
+
+                {/* Information */}
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-medium">Notion</p>
+
+                  <p className="text-xs text-gray-500">
+                    Search your Notion workspace
+                  </p>
+                </div>
+
+                {/* Toggle */}
+
+                <div
+                  className={`
+      relative
+      w-9
+      h-5
+      rounded-full
+      transition
+
+      ${notionEnabled ? "bg-white" : "bg-[#4a4a4a]"}
+    `}
+                >
+                  <div
+                    className={`
+        absolute
+        top-0.5
+        h-4
+        w-4
+        rounded-full
+        bg-black
+        transition-all
+
+        ${notionEnabled ? "left-[18px]" : "left-0.5"}
+      `}
+                  />
+                </div>
+              </button>
+              {/* Footer */}
               <div
                 className="
                   px-4
@@ -528,9 +516,13 @@ export default function ChatInput({
                 "
               >
                 <p className="text-[11px] text-gray-500">
-                  {stackOverflowEnabled
-                    ? "Stack Overflow is enabled for this message."
-                    : "No plugins enabled."}
+                  {stackOverflowEnabled && notionEnabled
+                    ? "Stack Overflow and Notion are enabled."
+                    : stackOverflowEnabled
+                      ? "Stack Overflow is enabled."
+                      : notionEnabled
+                        ? "Notion is enabled."
+                        : "No plugins enabled."}
                 </p>
               </div>
             </div>
@@ -569,17 +561,9 @@ export default function ChatInput({
 
           <button
             type="button"
-            onClick={() =>
-              onVoiceModeChange(
-                !voiceMode,
-              )
-            }
+            onClick={() => onVoiceModeChange(!voiceMode)}
             disabled={loading}
-            title={
-              voiceMode
-                ? "Turn off voice mode"
-                : "Turn on voice mode"
-            }
+            title={voiceMode ? "Turn off voice mode" : "Turn on voice mode"}
             className={`
               flex
               items-center
@@ -603,9 +587,7 @@ export default function ChatInput({
           </button>
 
           <VoiceButton
-            onTranscript={
-              handleVoiceTranscript
-            }
+            onTranscript={handleVoiceTranscript}
             disabled={loading}
             autoStart={voiceMode}
           />
@@ -613,10 +595,7 @@ export default function ChatInput({
           <button
             type="button"
             onClick={submit}
-            disabled={
-              loading ||
-              (!text.trim() && !file)
-            }
+            disabled={loading || (!text.trim() && !file)}
             title="Send"
             className="
               bg-white

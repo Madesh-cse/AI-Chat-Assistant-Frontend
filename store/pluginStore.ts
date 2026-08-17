@@ -5,6 +5,11 @@ interface PluginStore {
   toggleStackOverflow: () => void;
   enableStackOverflow: () => void;
   disableStackOverflow: () => void;
+
+  notionEnabled: boolean;
+  toggleNotion: () => void;
+  enableNotion: () => void;
+  disableNotion: () => void;
 }
 
 export const usePluginStore = create<PluginStore>((set) => ({
@@ -12,8 +17,7 @@ export const usePluginStore = create<PluginStore>((set) => ({
 
   toggleStackOverflow: () => {
     set((state) => ({
-      stackOverflowEnabled:
-        !state.stackOverflowEnabled,
+      stackOverflowEnabled: !state.stackOverflowEnabled,
     }));
   },
 
@@ -26,6 +30,26 @@ export const usePluginStore = create<PluginStore>((set) => ({
   disableStackOverflow: () => {
     set({
       stackOverflowEnabled: false,
+    });
+  },
+
+  notionEnabled: false,
+
+  toggleNotion: () => {
+    set((state) => ({
+      notionEnabled: !state.notionEnabled,
+    }));
+  },
+
+  enableNotion: () => {
+    set({
+      notionEnabled: true,
+    });
+  },
+
+  disableNotion: () => {
+    set({
+      notionEnabled: false,
     });
   },
 }));

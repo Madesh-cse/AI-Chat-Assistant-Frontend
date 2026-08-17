@@ -7,6 +7,7 @@ export async function sendMessage(
   message: string,
   conversationId?: number,
   stackOverflowEnabled: boolean = false,
+  notionEnabled: boolean = false,
 ): Promise<ChatResponse> {
   const response = await fetch(`${API_URL}/chat/`, {
     method: "POST",
@@ -19,6 +20,7 @@ export async function sendMessage(
       message,
       conversation_id: conversationId,
       stack_overflow_enabled: stackOverflowEnabled,
+      notion_enabled: notionEnabled
     }),
   });
 
