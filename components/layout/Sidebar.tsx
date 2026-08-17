@@ -16,14 +16,10 @@ import {
 import { useEffect, useState } from "react";
 
 import { useChatStore } from "@/store/chatStore";
-import {
-  deleteConversation,
-} from "@/services/chat";
+import { deleteConversation } from "@/services/chat";
 
-import {
-  togglePinConversation,
-} from "@/services/conversation";
-
+import { togglePinConversation } from "@/services/conversation";
+import SettingsModal from "../settings/SettingsModal";
 import PluginPanel from "@/components/plugins/PluginPanel";
 
 export default function Sidebar() {
@@ -39,24 +35,13 @@ export default function Sidebar() {
   } = useChatStore();
 
   const [creatingChat, setCreatingChat] = useState(false);
-
-  const [deletingChatId, setDeletingChatId] =
-    useState<number | null>(null);
-
-  const [showPlugins, setShowPlugins] =
-    useState(false);
-
-  // =========================================
-  // LOAD CONVERSATIONS
-  // =========================================
+  const [deletingChatId, setDeletingChatId] = useState<number | null>(null);
+  const [showPlugins, setShowPlugins] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
-
-  // =========================================
-  // CREATE CHAT
-  // =========================================
 
   async function handleCreateChat() {
     if (creatingChat) {
@@ -68,18 +53,11 @@ export default function Sidebar() {
     try {
       await createChat();
     } catch (error) {
-      console.error(
-        "Failed to create chat:",
-        error,
-      );
+      console.error("Failed to create chat:", error);
     } finally {
       setCreatingChat(false);
     }
   }
-
-  // =========================================
-  // DELETE CHAT
-  // =========================================
 
   async function handleDeleteChat(
     event: React.MouseEvent<HTMLButtonElement>,
@@ -106,18 +84,11 @@ export default function Sidebar() {
 
       deleteChat(id);
     } catch (error) {
-      console.error(
-        "Failed to delete conversation:",
-        error,
-      );
+      console.error("Failed to delete conversation:", error);
     } finally {
       setDeletingChatId(null);
     }
   }
-
-  // =========================================
-  // TOGGLE PIN
-  // =========================================
 
   async function handleTogglePin(
     event: React.MouseEvent<HTMLButtonElement>,
@@ -128,39 +99,18 @@ export default function Sidebar() {
     try {
       await togglePinChat(id);
     } catch (error) {
-      console.error(
-        "Failed to pin conversation:",
-        error,
-      );
+      console.error("Failed to pin conversation:", error);
     }
   }
 
-  // =========================================
-  // SPLIT CONVERSATIONS
-  // =========================================
+  const pinnedConversations = conversations.filter((chat) => chat.is_pinned);
 
-  const pinnedConversations =
-    conversations.filter(
-      (chat) => chat.is_pinned,
-    );
+  const normalConversations = conversations.filter((chat) => !chat.is_pinned);
 
-  const normalConversations =
-    conversations.filter(
-      (chat) => !chat.is_pinned,
-    );
+  function renderConversation(chat: (typeof conversations)[number]) {
+    const isActive = activeConversation === chat.id;
 
-  // =========================================
-  // CONVERSATION ITEM
-  // =========================================
-
-  function renderConversation(
-    chat: (typeof conversations)[number],
-  ) {
-    const isActive =
-      activeConversation === chat.id;
-
-    const isDeleting =
-      deletingChatId === chat.id;
+    const isDeleting = deletingChatId === chat.id;
 
     return (
       <div
@@ -173,11 +123,7 @@ export default function Sidebar() {
           rounded-lg
           transition
 
-          ${
-            isActive
-              ? "bg-[#2a2a2a]"
-              : "hover:bg-[#242424]"
-          }
+          ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#242424]"}
         `}
       >
         {/* Conversation */}
@@ -185,9 +131,7 @@ export default function Sidebar() {
         <button
           type="button"
           disabled={isDeleting}
-          onClick={() =>
-            setActiveChat(chat.id)
-          }
+          onClick={() => setActiveChat(chat.id)}
           className={`
             flex
             items-center
@@ -208,14 +152,9 @@ export default function Sidebar() {
             }
           `}
         >
-          <MessageSquare
-            size={16}
-            className="shrink-0"
-          />
+          <MessageSquare size={16} className="shrink-0" />
 
-          <span className="truncate">
-            {chat.title || "New chat"}
-          </span>
+          <span className="truncate">{chat.title || "New chat"}</span>
         </button>
 
         {/* Pin */}
@@ -223,17 +162,8 @@ export default function Sidebar() {
         <button
           type="button"
           disabled={isDeleting}
-          onClick={(event) =>
-            handleTogglePin(
-              event,
-              chat.id,
-            )
-          }
-          title={
-            chat.is_pinned
-              ? "Unpin conversation"
-              : "Pin conversation"
-          }
+          onClick={(event) => handleTogglePin(event, chat.id)}
+          title={chat.is_pinned ? "Unpin conversation" : "Pin conversation"}
           className={`
             shrink-0
             p-2
@@ -251,14 +181,7 @@ export default function Sidebar() {
             disabled:opacity-50
           `}
         >
-          <Pin
-            size={14}
-            className={
-              chat.is_pinned
-                ? "fill-current"
-                : ""
-            }
-          />
+          <Pin size={14} className={chat.is_pinned ? "fill-current" : ""} />
         </button>
 
         {/* Delete */}
@@ -266,12 +189,7 @@ export default function Sidebar() {
         <button
           type="button"
           disabled={isDeleting}
-          onClick={(event) =>
-            handleDeleteChat(
-              event,
-              chat.id,
-            )
-          }
+          onClick={(event) => handleDeleteChat(event, chat.id)}
           title="Delete conversation"
           className="
             shrink-0
@@ -288,9 +206,7 @@ export default function Sidebar() {
           "
         >
           {isDeleting ? (
-            <span className="text-xs">
-              ...
-            </span>
+            <span className="text-xs">...</span>
           ) : (
             <Trash2 size={15} />
           )}
@@ -322,7 +238,6 @@ export default function Sidebar() {
       ========================================= */}
 
       <div className="p-3">
-
         {/* BRAND */}
 
         <div
@@ -334,7 +249,6 @@ export default function Sidebar() {
           "
         >
           <div className="flex items-center gap-2">
-
             <div
               className="
                 h-8
@@ -351,9 +265,7 @@ export default function Sidebar() {
               C
             </div>
 
-            <span className="font-semibold text-sm">
-              CacheAI
-            </span>
+            <span className="font-semibold text-sm">CacheAI</span>
           </div>
 
           <button
@@ -397,17 +309,12 @@ export default function Sidebar() {
         >
           <Plus size={18} />
 
-          <span>
-            {creatingChat
-              ? "Creating..."
-              : "New chat"}
-          </span>
+          <span>{creatingChat ? "Creating..." : "New chat"}</span>
         </button>
 
         {/* NAVIGATION */}
 
         <div className="mt-3 space-y-1">
-
           {/* PROJECTS */}
 
           <button
@@ -460,9 +367,7 @@ export default function Sidebar() {
 
           <button
             type="button"
-            onClick={() =>
-              setShowPlugins(true)
-            }
+            onClick={() => setShowPlugins(true)}
             className={`
               w-full
               flex
@@ -510,9 +415,7 @@ export default function Sidebar() {
 
           <span>Search chats</span>
 
-          <span className="ml-auto text-xs text-gray-500">
-            Ctrl K
-          </span>
+          <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
         </button>
       </div>
 
@@ -528,14 +431,12 @@ export default function Sidebar() {
           chat-scroll
         "
       >
-
         {/* =====================================
             PINNED
         ===================================== */}
 
         {pinnedConversations.length > 0 && (
           <div className="mb-4">
-
             <div
               className="
                 flex
@@ -548,18 +449,13 @@ export default function Sidebar() {
                 text-gray-500
               "
             >
-              <Pin
-                size={13}
-                className="fill-current"
-              />
+              <Pin size={13} className="fill-current" />
 
               <span>Pinned</span>
             </div>
 
             <div className="space-y-1">
-              {pinnedConversations.map(
-                renderConversation,
-              )}
+              {pinnedConversations.map(renderConversation)}
             </div>
           </div>
         )}
@@ -569,7 +465,6 @@ export default function Sidebar() {
         ===================================== */}
 
         <div>
-
           <p
             className="
               px-3
@@ -588,17 +483,14 @@ export default function Sidebar() {
             </div>
           )}
 
-          {!loadingConversations &&
-            normalConversations.length === 0 && (
-              <div className="px-3 py-3 text-sm text-gray-500">
-                No conversations yet.
-              </div>
-            )}
+          {!loadingConversations && normalConversations.length === 0 && (
+            <div className="px-3 py-3 text-sm text-gray-500">
+              No conversations yet.
+            </div>
+          )}
 
           <div className="space-y-1">
-            {normalConversations.map(
-              renderConversation,
-            )}
+            {normalConversations.map(renderConversation)}
           </div>
         </div>
       </div>
@@ -614,7 +506,6 @@ export default function Sidebar() {
           border-[#2f2f2f]
         "
       >
-
         {/* AI MODEL */}
 
         <div
@@ -629,8 +520,7 @@ export default function Sidebar() {
             transition
             cursor-pointer
           "
-        >
-        </div>
+        ></div>
 
         {/* SETTINGS */}
 
@@ -649,22 +539,20 @@ export default function Sidebar() {
             text-xs
             text-gray-400
           "
+          onClick={() => setSettingsOpen(true)}
         >
           <Settings size={15} />
 
           <span>Settings</span>
         </button>
+        {settingsOpen && (
+          <SettingsModal onClose={() => setSettingsOpen(false)} />
+        )}
       </div>
 
       {/* PLUGIN PANEL */}
 
-      {showPlugins && (
-        <PluginPanel
-          onClose={() =>
-            setShowPlugins(false)
-          }
-        />
-      )}
+      {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
     </aside>
   );
 }
