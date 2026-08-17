@@ -210,7 +210,7 @@ export default function ChatInput({
 
               <span
                 className="
-                  max-w-[250px]
+                  max-w-62.5
                   truncate
                 "
               >
@@ -426,7 +426,7 @@ export default function ChatInput({
                       bg-white
                       transition-all
 
-                      ${stackOverflowEnabled ? "left-[18px]" : "left-0.5"}
+                      ${stackOverflowEnabled ? "left-4.5" : "left-0.5"}
                     `}
                   />
                 </div>
@@ -501,7 +501,7 @@ export default function ChatInput({
         bg-black
         transition-all
 
-        ${notionEnabled ? "left-[18px]" : "left-0.5"}
+        ${notionEnabled ? "left-4.5" : "left-0.5"}
       `}
                   />
                 </div>
@@ -554,7 +554,7 @@ export default function ChatInput({
               py-2
               leading-6
               placeholder:text-gray-500
-              max-h-[200px]
+              max-h-50
               overflow-y-hidden
             "
           />
