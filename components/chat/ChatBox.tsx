@@ -60,6 +60,13 @@ export default function ChatBox() {
     (chat) => chat.id === activeConversation,
   );
 
+  // Dynmaic Web Page Title
+  useEffect(() => {
+    const title = currentChat?.title?.trim();
+
+    document.title = title ? `${title} | AI Chat` : "AI Chat";
+  }, [currentChat?.title]);
+
   const messages = currentChat?.messages ?? [];
 
   // GET CONVERSATION ID

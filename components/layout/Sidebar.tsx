@@ -14,13 +14,14 @@ import {
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
+import type { MouseEvent } from "react";
 
 import { useChatStore } from "@/store/chatStore";
 import { deleteConversation } from "@/services/chat";
-
-import { togglePinConversation } from "@/services/conversation";
 import SettingsModal from "../settings/SettingsModal";
 import PluginPanel from "@/components/plugins/PluginPanel";
+
+import { togglePinConversation } from "@/services/conversation";
 
 export default function Sidebar() {
   const {
@@ -60,7 +61,7 @@ export default function Sidebar() {
   }
 
   async function handleDeleteChat(
-    event: React.MouseEvent<HTMLButtonElement>,
+    event: MouseEvent<HTMLButtonElement>,
     id: number,
   ) {
     event.stopPropagation();
@@ -91,7 +92,7 @@ export default function Sidebar() {
   }
 
   async function handleTogglePin(
-    event: React.MouseEvent<HTMLButtonElement>,
+    event: MouseEvent<HTMLButtonElement>,
     id: number,
   ) {
     event.stopPropagation();
@@ -104,7 +105,6 @@ export default function Sidebar() {
   }
 
   const pinnedConversations = conversations.filter((chat) => chat.is_pinned);
-
   const normalConversations = conversations.filter((chat) => !chat.is_pinned);
 
   function renderConversation(chat: (typeof conversations)[number]) {
@@ -126,8 +126,6 @@ export default function Sidebar() {
           ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#242424]"}
         `}
       >
-        {/* Conversation */}
-
         <button
           type="button"
           disabled={isDeleting}
@@ -156,9 +154,6 @@ export default function Sidebar() {
 
           <span className="truncate">{chat.title || "New chat"}</span>
         </button>
-
-        {/* Pin */}
-
         <button
           type="button"
           disabled={isDeleting}
@@ -183,9 +178,6 @@ export default function Sidebar() {
         >
           <Pin size={14} className={chat.is_pinned ? "fill-current" : ""} />
         </button>
-
-        {/* Delete */}
-
         <button
           type="button"
           disabled={isDeleting}
@@ -214,11 +206,6 @@ export default function Sidebar() {
       </div>
     );
   }
-
-  // =========================================
-  // UI
-  // =========================================
-
   return (
     <aside
       className="
@@ -233,13 +220,16 @@ export default function Sidebar() {
         relative
       "
     >
-      {/* =========================================
-          TOP
-      ========================================= */}
-
-      <div className="p-3">
-        {/* BRAND */}
-
+      <div
+        className="
+          shrink-0
+          p-3
+          bg-[#171717]
+          border-b
+          border-[#2f2f2f]
+          z-20
+        "
+      >
         <div
           className="
             flex
@@ -264,10 +254,8 @@ export default function Sidebar() {
             >
               C
             </div>
-
             <span className="font-semibold text-sm">CacheAI</span>
           </div>
-
           <button
             type="button"
             className="
@@ -283,9 +271,6 @@ export default function Sidebar() {
             <PanelLeftClose size={18} />
           </button>
         </div>
-
-        {/* NEW CHAT */}
-
         <button
           type="button"
           onClick={handleCreateChat}
@@ -311,12 +296,17 @@ export default function Sidebar() {
 
           <span>{creatingChat ? "Creating..." : "New chat"}</span>
         </button>
-
-        {/* NAVIGATION */}
-
+      </div>
+      <div
+        className="
+          flex-1
+          min-h-0
+          overflow-y-auto
+          px-3
+          chat-scroll
+        "
+      >
         <div className="mt-3 space-y-1">
-          {/* PROJECTS */}
-
           <button
             type="button"
             className="
@@ -338,9 +328,6 @@ export default function Sidebar() {
 
             <span>Projects</span>
           </button>
-
-          {/* SCHEDULE */}
-
           <button
             type="button"
             className="
@@ -362,9 +349,6 @@ export default function Sidebar() {
 
             <span>Schedule</span>
           </button>
-
-          {/* PLUGINS */}
-
           <button
             type="button"
             onClick={() => setShowPlugins(true)}
@@ -391,9 +375,6 @@ export default function Sidebar() {
             <span>Plugins</span>
           </button>
         </div>
-
-        {/* SEARCH */}
-
         <button
           type="button"
           className="
@@ -417,31 +398,34 @@ export default function Sidebar() {
 
           <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
         </button>
-      </div>
 
-      {/* =========================================
-          CONVERSATIONS
-      ========================================= */}
+        <div className="mt-2">
+          {pinnedConversations.length > 0 && (
+            <div className="mb-4">
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  px-3
+                  py-2
+                  text-xs
+                  font-medium
+                  text-gray-500
+                "
+              >
+                <Pin size={13} className="fill-current" />
+                <span>Pinned</span>
+              </div>
+              <div className="space-y-1">
+                {pinnedConversations.map(renderConversation)}
+              </div>
+            </div>
+          )}
 
-      <div
-        className="
-          flex-1
-          overflow-y-auto
-          px-3
-          chat-scroll
-        "
-      >
-        {/* =====================================
-            PINNED
-        ===================================== */}
-
-        {pinnedConversations.length > 0 && (
-          <div className="mb-4">
-            <div
+          <div>
+            <p
               className="
-                flex
-                items-center
-                gap-2
                 px-3
                 py-2
                 text-xs
@@ -449,81 +433,47 @@ export default function Sidebar() {
                 text-gray-500
               "
             >
-              <Pin size={13} className="fill-current" />
-
-              <span>Pinned</span>
-            </div>
-
+              Chats
+            </p>
+            {loadingConversations && (
+              <div
+                className="
+                  px-3
+                  py-3
+                  text-sm
+                  text-gray-500
+                "
+              >
+                Loading conversations...
+              </div>
+            )}
+            {!loadingConversations && normalConversations.length === 0 && (
+              <div
+                className="
+                    px-3
+                    py-3
+                    text-sm
+                    text-gray-500
+                  "
+              >
+                No conversations yet.
+              </div>
+            )}
             <div className="space-y-1">
-              {pinnedConversations.map(renderConversation)}
+              {normalConversations.map(renderConversation)}
             </div>
-          </div>
-        )}
-
-        {/* =====================================
-            CHATS
-        ===================================== */}
-
-        <div>
-          <p
-            className="
-              px-3
-              py-2
-              text-xs
-              font-medium
-              text-gray-500
-            "
-          >
-            Chats
-          </p>
-
-          {loadingConversations && (
-            <div className="px-3 py-3 text-sm text-gray-500">
-              Loading conversations...
-            </div>
-          )}
-
-          {!loadingConversations && normalConversations.length === 0 && (
-            <div className="px-3 py-3 text-sm text-gray-500">
-              No conversations yet.
-            </div>
-          )}
-
-          <div className="space-y-1">
-            {normalConversations.map(renderConversation)}
           </div>
         </div>
       </div>
-
-      {/* =========================================
-          BOTTOM
-      ========================================= */}
-
       <div
         className="
+          shrink-0
           p-3
           border-t
           border-[#2f2f2f]
+          bg-[#171717]
         "
       >
-        {/* AI MODEL */}
-
-        <div
-          className="
-            flex
-            items-center
-            gap-2.5
-            px-2
-            py-2
-            rounded-lg
-            hover:bg-[#242424]
-            transition
-            cursor-pointer
-          "
-        ></div>
-
-        {/* SETTINGS */}
-
         <button
           type="button"
           className="
@@ -549,9 +499,6 @@ export default function Sidebar() {
           <SettingsModal onClose={() => setSettingsOpen(false)} />
         )}
       </div>
-
-      {/* PLUGIN PANEL */}
-
       {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
     </aside>
   );
