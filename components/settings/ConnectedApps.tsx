@@ -1,530 +1,353 @@
 "use client";
 
-import { useState } from "react";
-import {
-  CheckCircle2,
-  ExternalLink,
-  Settings,
-  Unplug,
-  AlertTriangle,
-  X,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle2, ExternalLink, Settings, Unplug } from "lucide-react";
 
-interface AppConnection {
+import {
+  connectApp,
+  disconnectApp,
+  getAppConnections,
+  type AppConnection,
+} from "../../services/appConnectionApi";
+
+interface AppDefinition {
   id: string;
   name: string;
   description: string;
-  connected: boolean;
 }
 
-const initialApps: AppConnection[] = [
+const AVAILABLE_APPS: AppDefinition[] = [
   {
     id: "notion",
     name: "Notion",
     description: "Search and read pages from your connected Notion workspace.",
-    connected: true,
   },
   {
     id: "stackoverflow",
     name: "Stack Overflow",
     description: "Search programming questions and community solutions.",
-    connected: true,
   },
 ];
 
 export default function ConnectedApps() {
-  const [apps, setApps] = useState<AppConnection[]>(initialApps);
+  const [apps, setApps] = useState<AppConnection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingApp, setProcessingApp] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [disconnectingApp, setDisconnectingApp] =
-    useState<AppConnection | null>(null);
+  // ============================================
+  // LOAD CONNECTIONS
+  // ============================================
 
-  const disconnectApp = () => {
-    if (!disconnectingApp) return;
+  useEffect(() => {
+    loadConnections();
+  }, []);
 
-    setApps((current) =>
-      current.map((app) =>
-        app.id === disconnectingApp.id
-          ? {
-              ...app,
-              connected: false,
-            }
-          : app,
-      ),
-    );
+  const loadConnections = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    setDisconnectingApp(null);
+      const data = await getAppConnections();
+
+      setApps(data);
+    } catch (error) {
+      console.error("Failed to load app connections:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load connected apps.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const connectApp = (id: string) => {
-    setApps((current) =>
-      current.map((app) =>
-        app.id === id
-          ? {
-              ...app,
-              connected: true,
-            }
-          : app,
-      ),
-    );
+  // ============================================
+  // CHECK CONNECTION
+  // ============================================
+
+  const isConnected = (appId: string) => {
+    return apps.some((app) => app.app_id === appId && app.connected === true);
   };
 
-  return (
-    <>
-      <div className="space-y-6">
-        {/* HEADER */}
+  // ============================================
+  // CONNECT
+  // ============================================
+
+  const handleConnect = async (appId: string) => {
+    try {
+      setProcessingApp(appId);
+      setError(null);
+
+      const connection = await connectApp(appId);
+
+      setApps((current) => {
+        const exists = current.some((app) => app.app_id === appId);
+
+        if (exists) {
+          return current.map((app) =>
+            app.app_id === appId ? connection : app,
+          );
+        }
+
+        return [...current, connection];
+      });
+    } catch (error) {
+      console.error(`Failed to connect ${appId}:`, error);
+
+      setError(
+        error instanceof Error ? error.message : `Failed to connect ${appId}.`,
+      );
+    } finally {
+      setProcessingApp(null);
+    }
+  };
+
+  // ============================================
+  // DISCONNECT
+  // ============================================
+
+  const handleDisconnect = async (appId: string) => {
+    try {
+      setProcessingApp(appId);
+      setError(null);
+
+      const connection = await disconnectApp(appId);
+
+      setApps((current) =>
+        current.map((app) => (app.app_id === appId ? connection : app)),
+      );
+    } catch (error) {
+      console.error(`Failed to disconnect ${appId}:`, error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : `Failed to disconnect ${appId}.`,
+      );
+    } finally {
+      setProcessingApp(null);
+    }
+  };
+
+  // ============================================
+  // LOADING
+  // ============================================
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-(--foreground)">
             Connected Apps
           </h2>
 
-          <p className="mt-1 max-w-xl text-sm leading-6 text-(--muted)">
-            Connect external apps and services so your assistant can access
-            information and perform useful tasks on your behalf.
+          <p className="mt-1 text-sm text-(--muted)">
+            Manage the apps and services your assistant can access.
           </p>
         </div>
 
-        {/* APPS */}
-        <div className="space-y-3">
-          {apps.map((app) => (
-            <AppCard
-              key={app.id}
-              app={app}
-              onConnect={() => connectApp(app.id)}
-              onDisconnect={() => setDisconnectingApp(app)}
-            />
-          ))}
-        </div>
+        <div className="rounded-xl border border-(--border) bg-(--card) p-6">
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-(--border) border-t-blue-500" />
 
-        {/* ADD MORE APPS */}
-        <div
-          className="
-            rounded-xl
-            border border-dashed border-(--border)
-            bg-(--card)
-            p-5
-          "
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-(--foreground)">
-                More integrations
-              </h3>
-
-              <p className="mt-1 text-sm text-(--muted)">
-                Additional integrations can be connected as they become
-                available.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              disabled
-              className="
-                rounded-lg
-                border border-(--border)
-                px-3 py-2
-                text-sm
-                text-(--muted)
-                opacity-60
-                cursor-not-allowed
-              "
-            >
-              Coming soon
-            </button>
-          </div>
-        </div>
-
-        {/* SECURITY NOTE */}
-        <div
-          className="
-            flex gap-3
-            rounded-xl
-            border border-(--border)
-            bg-(--card)
-            p-4
-          "
-        >
-          <div className="mt-0.5">
-            <CheckCircle2 size={18} className="text-green-500" />
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-(--foreground)">
-              Your connections are controlled by you
-            </h3>
-
-            <p className="mt-1 text-xs leading-5 text-(--muted)">
-              Connected apps can be disconnected at any time. Your assistant
-              only accesses services that you explicitly connect.
-            </p>
+            <p className="text-sm text-(--muted)">Loading connected apps...</p>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* DISCONNECT CONFIRMATION */}
-      {disconnectingApp && (
-        <DisconnectDialog
-          app={disconnectingApp}
-          onCancel={() => setDisconnectingApp(null)}
-          onConfirm={disconnectApp}
-        />
+  // ============================================
+  // UI
+  // ============================================
+
+  return (
+    <div className="space-y-4">
+      {/* HEADER */}
+
+      <div>
+        <h2 className="text-lg font-semibold text-(--foreground)">
+          Connected Apps
+        </h2>
+
+        <p className="mt-1 text-sm text-(--muted)">
+          Manage the apps and services your assistant can access.
+        </p>
+      </div>
+
+      {/* ERROR */}
+
+      {error && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
       )}
-    </>
-  );
-}
 
-function AppCard({
-  app,
-  onConnect,
-  onDisconnect,
-}: {
-  app: AppConnection;
-  onConnect: () => void;
-  onDisconnect: () => void;
-}) {
-  return (
-    <div
-      className="
-        flex
-        items-center
-        justify-between
-        gap-5
-        rounded-xl
-        border
-        border-(--border)
-        bg-(--card)
-        p-4
-        transition
-        hover:bg-black/3
-        dark:hover:bg-white/3
-      "
-    >
-      {/* APP INFORMATION */}
-      <div className="flex min-w-0 items-center gap-4">
-        <AppIcon id={app.id} />
+      {/* APPS */}
 
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-medium text-(--foreground)">{app.name}</h3>
+      <div className="space-y-3">
+        {AVAILABLE_APPS.map((app) => {
+          const connected = isConnected(app.id);
 
-            {app.connected && (
-              <span
-                className="
-                  inline-flex
-                  items-center
-                  gap-1
-                  rounded-full
-                  bg-green-500/10
-                  px-2
-                  py-0.5
-                  text-xs
-                  font-medium
-                  text-green-500
-                "
-              >
-                <CheckCircle2 size={12} />
-                Connected
-              </span>
-            )}
-          </div>
+          const processing = processingApp === app.id;
 
-          <p className="mt-1 max-w-lg text-sm leading-5 text-(--muted)">
-            {app.description}
-          </p>
-        </div>
-      </div>
-
-      {/* ACTIONS */}
-      <div className="flex shrink-0 items-center gap-2">
-        {app.connected ? (
-          <>
-            <button
-              type="button"
+          return (
+            <div
+              key={app.id}
               className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-lg
-                border
-                border-(--border)
-                px-3
-                py-2
-                text-sm
-                text-(--foreground)
+                flex items-center justify-between
+                rounded-xl
+                border border-(--border)
+                bg-(--card)
+                p-4
                 transition
-                hover:bg-black/5
-                dark:hover:bg-white/10
+                hover:bg-black/3
+                dark:hover:bg-white/3
               "
             >
-              <Settings size={15} />
-              <span className="hidden sm:inline">Manage</span>
-            </button>
+              {/* LEFT */}
 
-            <button
-              type="button"
-              onClick={onDisconnect}
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-lg
-                px-3
-                py-2
-                text-sm
-                text-red-500
-                transition
-                hover:bg-red-500/10
-              "
-            >
-              <Unplug size={15} />
+              <div className="flex items-center gap-4">
+                {/* ICON */}
 
-              <span className="hidden sm:inline">Disconnect</span>
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={onConnect}
-            className="
-              inline-flex
-              items-center
-              gap-2
-              rounded-lg
-              bg-black
-              px-4
-              py-2
-              text-sm
-              font-medium
-              text-white
-              transition
-              hover:opacity-90
-              dark:bg-white
-              dark:text-black
-            "
-          >
-            <ExternalLink size={15} />
-            Connect
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
+                <div
+                  className="
+                    flex h-11 w-11
+                    items-center justify-center
+                    rounded-xl
+                    bg-black/5
+                    dark:bg-white/10
+                  "
+                >
+                  {app.id === "notion" ? (
+                    <span className="text-lg font-bold">N</span>
+                  ) : (
+                    <span className="text-sm font-bold">SO</span>
+                  )}
+                </div>
 
-function AppIcon({ id }: { id: string }) {
-  if (id === "notion") {
-    return (
-      <div
-        className="
-          flex
-          h-11
-          w-11
-          shrink-0
-          items-center
-          justify-center
-          rounded-xl
-          border
-          border-(--border)
-          bg-(--background)
-          text-(--foreground)
-        "
-      >
-        <span className="text-lg font-bold">N</span>
-      </div>
-    );
-  }
+                {/* INFO */}
 
-  if (id === "stackoverflow") {
-    return (
-      <div
-        className="
-          flex
-          h-11
-          w-11
-          shrink-0
-          items-center
-          justify-center
-          rounded-xl
-          border
-          border-(--border)
-          bg-(--background)
-          text-(--foreground)
-        "
-      >
-        <span className="text-xs font-bold">SO</span>
-      </div>
-    );
-  }
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-(--foreground)">
+                      {app.name}
+                    </h3>
 
-  return (
-    <div
-      className="
-        flex
-        h-11
-        w-11
-        shrink-0
-        items-center
-        justify-center
-        rounded-xl
-        border
-        border-(--border)
-        bg-(--background)
-        text-(--foreground)
-      "
-    >
-      ?
-    </div>
-  );
-}
+                    {connected && (
+                      <span className="flex items-center gap-1 text-xs text-green-500">
+                        <CheckCircle2 size={14} />
+                        Connected
+                      </span>
+                    )}
+                  </div>
 
-function DisconnectDialog({
-  app,
-  onCancel,
-  onConfirm,
-}: {
-  app: AppConnection;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div
-      className="
-        fixed
-        inset-0
-        z-200
-        flex
-        items-center
-        justify-center
-        bg-black/60
-        px-4
-        backdrop-blur-sm
-      "
-    >
-      <div
-        className="
-          w-full
-          max-w-md
-          overflow-hidden
-          rounded-2xl
-          border
-          border-(--border)
-          bg-(--background)
-          shadow-2xl
-        "
-      >
-        {/* HEADER */}
-        <div
-          className="
-            flex
-            items-center
-            justify-between
-            border-b
-            border-(--border)
-            px-5
-            py-4
-          "
-        >
-          <h3 className="font-semibold text-(--foreground)">
-            Disconnect {app.name}?
-          </h3>
+                  <p className="mt-1 max-w-md text-sm text-(--muted)">
+                    {app.description}
+                  </p>
+                </div>
+              </div>
 
-          <button
-            type="button"
-            onClick={onCancel}
-            className="
-              rounded-lg
-              p-2
-              text-(--muted)
-              transition
-              hover:bg-black/5
-              hover:text-(--foreground)
-              dark:hover:bg-white/10
-            "
-          >
-            <X size={18} />
-          </button>
-        </div>
+              {/* ACTIONS */}
 
-        {/* CONTENT */}
-        <div className="p-5">
-          <div
-            className="
-              mb-4
-              flex
-              items-start
-              gap-3
-              rounded-xl
-              border
-              border-yellow-500/20
-              bg-yellow-500/5
-              p-4
-            "
-          >
-            <AlertTriangle
-              size={20}
-              className="mt-0.5 shrink-0 text-yellow-500"
-            />
+              <div className="flex items-center gap-2">
+                {connected ? (
+                  <>
+                    {/* MANAGE */}
 
-            <p className="text-sm leading-5 text-(--muted)">
-              Your assistant will no longer be able to access
-              {` ${app.name}`} through this connection.
-            </p>
-          </div>
+                    <button
+                      type="button"
+                      disabled={processing}
+                      className="
+                        flex items-center gap-2
+                        rounded-lg
+                        px-3 py-2
+                        text-sm
+                        text-(--foreground)
+                        transition
+                        hover:bg-black/5
+                        dark:hover:bg-white/10
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                      "
+                    >
+                      <Settings size={15} />
+                      Manage
+                    </button>
 
-          <p className="text-sm leading-6 text-(--muted)">
-            You can reconnect this app later if you want to use it again.
-          </p>
-        </div>
+                    {/* DISCONNECT */}
 
-        {/* ACTIONS */}
-        <div
-          className="
-            flex
-            justify-end
-            gap-2
-            border-t
-            border-(--border)
-            px-5
-            py-4
-          "
-        >
-          <button
-            type="button"
-            onClick={onCancel}
-            className="
-              rounded-lg
-              border
-              border-(--border)
-              px-4
-              py-2
-              text-sm
-              text-(--foreground)
-              transition
-              hover:bg-black/5
-              dark:hover:bg-white/10
-            "
-          >
-            Cancel
-          </button>
+                    <button
+                      type="button"
+                      disabled={processing}
+                      onClick={() => handleDisconnect(app.id)}
+                      className="
+                        flex items-center gap-2
+                        rounded-lg
+                        px-3 py-2
+                        text-sm
+                        text-red-500
+                        transition
+                        hover:bg-red-500/10
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                      "
+                    >
+                      {processing ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500/30 border-t-red-500" />
+                          Disconnecting...
+                        </>
+                      ) : (
+                        <>
+                          <Unplug size={15} />
+                          Disconnect
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  /* CONNECT */
 
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="
-              rounded-lg
-              bg-red-500
-              px-4
-              py-2
-              text-sm
-              font-medium
-              text-white
-              transition
-              hover:bg-red-600
-            "
-          >
-            Disconnect
-          </button>
-        </div>
+                  <button
+                    type="button"
+                    disabled={processing}
+                    onClick={() => handleConnect(app.id)}
+                    className="
+                      flex items-center gap-2
+                      rounded-lg
+                      bg-black
+                      px-4 py-2
+                      text-sm
+                      text-white
+                      transition
+                      hover:opacity-90
+                      disabled:cursor-not-allowed
+                      disabled:opacity-50
+                      dark:bg-white
+                      dark:text-black
+                    "
+                  >
+                    {processing ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white dark:border-black/30 dark:border-t-black" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink size={15} />
+                        Connect
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
