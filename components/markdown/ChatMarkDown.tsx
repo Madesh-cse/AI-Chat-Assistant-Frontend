@@ -15,12 +15,7 @@ import {
   TableCell,
 } from "./MarkTable";
 
-import {
-  H1,
-  H2,
-  H3,
-  Paragraph,
-} from "./MarkdownTypography";
+import { H1, H2, H3, Paragraph } from "./MarkdownTypography";
 
 import MarkdownLink from "./MarkdownLink";
 import MarkdownImage from "./MarkdownImage";
@@ -29,35 +24,20 @@ interface Props {
   content: string;
 }
 
-export default function ChatMarkdown({
-  content,
-}: Props) {
+export default function ChatMarkdown({ content }: Props) {
   return (
     <div className="chat-markdown w-full min-w-0">
-
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
-
         components={{
+          h1: ({ children }) => <H1>{children}</H1>,
 
-          h1: ({ children }) => (
-            <H1>{children}</H1>
-          ),
+          h2: ({ children }) => <H2>{children}</H2>,
 
-          h2: ({ children }) => (
-            <H2>{children}</H2>
-          ),
+          h3: ({ children }) => <H3>{children}</H3>,
 
-          h3: ({ children }) => (
-            <H3>{children}</H3>
-          ),
-
-          p: ({ children }) => (
-            <Paragraph>
-              {children}
-            </Paragraph>
-          ),
+          p: ({ children }) => <Paragraph>{children}</Paragraph>,
 
           ul: ({ children }) => (
             <ul
@@ -85,16 +65,10 @@ export default function ChatMarkdown({
             </ol>
           ),
 
-          li: ({ children }) => (
-            <li className="leading-7">
-              {children}
-            </li>
-          ),
+          li: ({ children }) => <li className="leading-7">{children}</li>,
 
           a: ({ href, children }) => (
-            <MarkdownLink href={href}>
-              {children}
-            </MarkdownLink>
+            <MarkdownLink href={href}>{children}</MarkdownLink>
           ),
 
           blockquote: ({ children }) => (
@@ -126,71 +100,31 @@ export default function ChatMarkdown({
 
           table: ({ children }) => (
             <div className="overflow-x-auto my-6">
-              <Table>
-                {children}
-              </Table>
+              <Table>{children}</Table>
             </div>
           ),
 
-          thead: ({ children }) => (
-            <TableHead>
-              {children}
-            </TableHead>
-          ),
+          thead: ({ children }) => <TableHead>{children}</TableHead>,
 
-          tbody: ({ children }) => (
-            <TableBody>
-              {children}
-            </TableBody>
-          ),
+          tbody: ({ children }) => <TableBody>{children}</TableBody>,
 
-          tr: ({ children }) => (
-            <TableRow>
-              {children}
-            </TableRow>
-          ),
+          tr: ({ children }) => <TableRow>{children}</TableRow>,
 
-          th: ({ children }) => (
-            <TableHeader>
-              {children}
-            </TableHeader>
-          ),
+          th: ({ children }) => <TableHeader>{children}</TableHeader>,
 
-          td: ({ children }) => (
-            <TableCell>
-              {children}
-            </TableCell>
-          ),
+          td: ({ children }) => <TableCell>{children}</TableCell>,
 
           img: ({ src, alt }) => (
             <MarkdownImage
-              src={
-                typeof src === "string"
-                  ? src
-                  : undefined
-              }
-              alt={
-                typeof alt === "string"
-                  ? alt
-                  : undefined
-              }
+              src={typeof src === "string" ? src : undefined}
+              alt={typeof alt === "string" ? alt : undefined}
             />
           ),
 
+          code({ className, children, ...props }: any) {
+            const match = /language-(\w+)/.exec(className || "");
 
-          code({
-            className,
-            children,
-            ...props
-          }: any) {
-
-            const match =
-              /language-(\w+)/.exec(
-                className || ""
-              );
-
-            const language =
-              match?.[1] || "text";
+            const language = match?.[1] || "text";
 
             /*
              * react-markdown gives fenced blocks:
@@ -205,15 +139,14 @@ export default function ChatMarkdown({
              *
              */
 
-            const isInline =
-              !className;
+            const isInline = !className;
 
             if (isInline) {
               return (
                 <code
                   className="
-                    bg-[#1e1e1e]
-                    text-green-400
+                    bg-[#2f2f2f]
+                    text-[#e8e8e6]
                     rounded-md
                     px-1.5
                     py-0.5
@@ -228,39 +161,27 @@ export default function ChatMarkdown({
             }
 
             return (
-              <CodeBlock
-                language={language}
-              >
-                {String(children).replace(
-                  /\n$/,
-                  ""
-                )}
+              <CodeBlock language={language}>
+                {String(children).replace(/\n$/, "")}
               </CodeBlock>
             );
           },
 
           pre: ({ children }) => (
-            <div className="my-5 w-full overflow-hidden">
-              {children}
-            </div>
+            <div className="my-5 w-full overflow-hidden">{children}</div>
           ),
 
           strong: ({ children }) => (
-            <strong className="font-semibold text-white">
-              {children}
-            </strong>
+            <strong className="font-semibold text-white">{children}</strong>
           ),
 
           em: ({ children }) => (
-            <em className="italic text-gray-300">
-              {children}
-            </em>
+            <em className="italic text-gray-300">{children}</em>
           ),
         }}
       >
         {content}
       </ReactMarkdown>
-
     </div>
   );
 }

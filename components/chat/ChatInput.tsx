@@ -187,7 +187,7 @@ export default function ChatInput({
   }
 
   return (
-    <div className="bg-[#1e1e1e] pt-2">
+    <div className="bg-[#212121] pt-2">
       <div className="max-w-3xl mx-auto px-3">
         {file && (
           <div className="mb-2">
