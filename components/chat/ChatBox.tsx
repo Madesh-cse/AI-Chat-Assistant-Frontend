@@ -68,6 +68,7 @@ export default function ChatBox() {
   }, [currentChat?.title]);
 
   const messages = currentChat?.messages ?? [];
+  const hasMessages = messages.length > 0;
 
   // GET CONVERSATION ID
 
@@ -418,10 +419,6 @@ You can now ask questions about this PDF.
     }
   }
 
-  // ==================================================
-  // UI
-  // ==================================================
-
   return (
     <div className="flex h-screen bg-[#212121] text-white">
       <Sidebar />
@@ -429,14 +426,37 @@ You can now ask questions about this PDF.
       <main className="flex min-w-0 flex-1 flex-col">
         <Header />
 
-        <ChatArea messages={messages} loading={loading} voiceMode={voiceMode} />
+        {hasMessages ? (
+          <>
+            <ChatArea
+              messages={messages}
+              loading={loading}
+              voiceMode={voiceMode}
+            />
 
-        <ChatInput
-          onSend={handleSend}
-          loading={loading}
-          voiceMode={voiceMode}
-          onVoiceModeChange={setVoiceMode}
-        />
+            <ChatInput
+              onSend={handleSend}
+              loading={loading}
+              voiceMode={voiceMode}
+              onVoiceModeChange={setVoiceMode}
+            />
+          </>
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center px-4">
+            <div className="w-full max-w-3xl -mt-16">
+              <h1 className="text-3xl font-semibold text-center mb-8">
+                Welcome Madesh, what do you want to do?
+              </h1>
+
+              <ChatInput
+                onSend={handleSend}
+                loading={loading}
+                voiceMode={voiceMode}
+                onVoiceModeChange={setVoiceMode}
+              />
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
