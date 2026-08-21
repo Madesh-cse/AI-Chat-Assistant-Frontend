@@ -1,19 +1,42 @@
 "use client";
 
-import { ChevronDown, Share, MoreVertical } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Share, MoreVertical, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { useChatStore } from "@/store/chatStore";
 
 export default function Header() {
+  const router = useRouter();
+
   const { conversations, activeConversation } = useChatStore();
+
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // Find currently active conversation
   const activeChat = conversations.find(
     (chat) => chat.id === activeConversation,
   );
 
-  // Same title used in sidebar
   const chatTitle = activeChat?.title?.trim() || "New Chat";
+
+  // =========================================
+  // LOGOUT
+  // =========================================
+
+  function handleLogout() {
+    // Remove authentication token
+    localStorage.removeItem("access_token");
+
+    // If you use another token name, remove it here too
+    localStorage.removeItem("token");
+
+    // Close menu
+    setMoreOpen(false);
+
+    // Redirect to login
+    router.push("/login");
+  }
 
   return (
     <header
@@ -110,13 +133,7 @@ export default function Header() {
           RIGHT ACTIONS
       ========================================= */}
 
-      <div
-        className="
-          flex
-          items-center
-          gap-1
-        "
-      >
+      <div className="flex items-center gap-1">
         {/* Share */}
 
         <button
@@ -136,20 +153,68 @@ export default function Header() {
 
         {/* More */}
 
-        <button
-          type="button"
-          title="More"
-          className="
-            p-2
-            rounded-lg
-            text-gray-300
-            hover:bg-[#303030]
-            hover:text-white
-            transition
-          "
-        >
-          <MoreVertical size={18} />
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            title="More"
+            onClick={() => setMoreOpen((current) => !current)}
+            className="
+              p-2
+              rounded-lg
+              text-gray-300
+              hover:bg-[#303030]
+              hover:text-white
+              transition
+            "
+          >
+            <MoreVertical size={18} />
+          </button>
+
+          {/* More Menu */}
+
+          {moreOpen && (
+            <div
+              className="
+                absolute
+                right-0
+                top-11
+                w-48
+                rounded-xl
+                border
+                border-[#3f3f3f]
+                bg-[#252525]
+                shadow-2xl
+                overflow-hidden
+                z-50
+              "
+            >
+              {/* Logout */}
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="
+                  w-full
+                  flex
+                  items-center
+                  gap-3
+                  px-4
+                  py-3
+                  text-left
+                  text-sm
+                  text-red-400
+                  hover:bg-[#303030]
+                  hover:text-red-300
+                  transition
+                "
+              >
+                <LogOut size={17} />
+
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

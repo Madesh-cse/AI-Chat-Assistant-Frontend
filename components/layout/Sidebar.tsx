@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import type { MouseEvent } from "react";
 
 import { useChatStore } from "@/store/chatStore";
-import { deleteConversation } from "@/services/chat";
+import { deleteConversation } from "@/services/conversation";
 import SettingsModal from "../settings/SettingsModal";
 import PluginPanel from "@/components/plugins/PluginPanel";
 

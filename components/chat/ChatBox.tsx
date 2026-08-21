@@ -6,11 +6,8 @@ import ChatArea from "./ChatArea";
 import ChatInput from "./ChatInput";
 
 import { useEffect, useState } from "react";
-
 import { Message } from "@/types/chat";
-
 import { streamMessage } from "@/services/chat";
-
 import { useChatStore } from "@/store/chatStore";
 
 const API_URL = "http://localhost:8000";
