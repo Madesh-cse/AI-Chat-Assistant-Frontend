@@ -9,11 +9,15 @@ export async function sendMessage(
   stackOverflowEnabled: boolean = false,
   notionEnabled: boolean = false,
 ): Promise<ChatResponse> {
+
+  const token = localStorage.getItem("access_token");
   const response = await fetch(`${API_URL}/chat/`, {
     method: "POST",
 
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+
     },
 
     body: JSON.stringify({
@@ -43,11 +47,14 @@ export async function streamMessage(
     throw new Error("Conversation ID is required");
   }
 
+  const token = localStorage.getItem("access_token");
+
   const response = await fetch(`${API_URL}/chat/stream`, {
     method: "POST",
 
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
 
     body: JSON.stringify({
@@ -94,28 +101,3 @@ export async function streamMessage(
   }
 }
 
-// DELETE CONVERSATION
-
-export async function deleteConversation(
-  conversationId: number,
-): Promise<void> {
-  const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    let message = "Failed to delete conversation.";
-
-    try {
-      const data = await response.json();
-
-      if (typeof data.detail === "string") {
-        message = data.detail;
-      }
-    } catch {
-      // Ignore
-    }
-
-    throw new Error(message);
-  }
-}
