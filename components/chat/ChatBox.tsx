@@ -41,6 +41,7 @@ export default function ChatBox() {
 
   const [loading, setLoading] = useState(false);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [userName, setUserName] = useState("User");
   // TEMP MESSAGE ID
   function createTempMessageId(): number {
     return -Date.now() - Math.floor(Math.random() * 1000);
@@ -50,6 +51,20 @@ export default function ChatBox() {
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) return;
+    try {
+      const user = JSON.parse(storedUser);
+
+      if (user?.name) {
+        setUserName(user.name);
+      }
+    } catch (error) {
+      console.error("Failed to parse user data:", error);
+    }
+  }, []);
 
   // CURRENT CHAT
 
@@ -442,7 +457,7 @@ You can now ask questions about this PDF.
           <div className="flex flex-1 flex-col items-center justify-center px-4">
             <div className="w-full max-w-3xl -mt-16">
               <h1 className="text-3xl font-semibold text-center mb-8">
-                Welcome Madesh, what do you want to do?
+                Welcome {userName}, what do you want to do?
               </h1>
 
               <ChatInput

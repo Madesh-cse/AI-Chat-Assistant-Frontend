@@ -21,6 +21,7 @@ import { useChatStore } from "@/store/chatStore";
 import { deleteConversation } from "@/services/conversation";
 import SettingsModal from "../settings/SettingsModal";
 import PluginPanel from "@/components/plugins/PluginPanel";
+import DeleteConversationModal from "../Model/DeleteConversationModel";
 
 import { togglePinConversation } from "@/services/conversation";
 
@@ -38,6 +39,9 @@ export default function Sidebar() {
 
   const [creatingChat, setCreatingChat] = useState(false);
   const [deletingChatId, setDeletingChatId] = useState<number | null>(null);
+  const [chatPendingDelete, setChatPendingDelete] = useState<
+    (typeof conversations)[number] | null
+  >(null);
   const [showPlugins, setShowPlugins] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -62,9 +66,9 @@ export default function Sidebar() {
     }
   }
 
-  async function handleDeleteChat(
+  function handleRequestDelete(
     event: MouseEvent<HTMLButtonElement>,
-    id: number,
+    chat: (typeof conversations)[number],
   ) {
     event.stopPropagation();
 
@@ -72,14 +76,13 @@ export default function Sidebar() {
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this conversation?",
-    );
+    setChatPendingDelete(chat);
+  }
 
-    if (!confirmed) {
-      return;
-    }
+  async function handleConfirmDelete() {
+    if (!chatPendingDelete) return;
 
+    const id = chatPendingDelete.id;
     setDeletingChatId(id);
 
     try {
@@ -90,6 +93,7 @@ export default function Sidebar() {
       console.error("Failed to delete conversation:", error);
     } finally {
       setDeletingChatId(null);
+      setChatPendingDelete(null);
     }
   }
 
@@ -183,7 +187,7 @@ export default function Sidebar() {
         <button
           type="button"
           disabled={isDeleting}
-          onClick={(event) => handleDeleteChat(event, chat.id)}
+          onClick={(event) => handleRequestDelete(event, chat)}
           title="Delete conversation"
           className="
             shrink-0
@@ -531,6 +535,15 @@ export default function Sidebar() {
         )}
       </div>
       {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
+
+      {chatPendingDelete && (
+        <DeleteConversationModal
+          title={chatPendingDelete.title}
+          isDeleting={deletingChatId === chatPendingDelete.id}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setChatPendingDelete(null)}
+        />
+      )}
     </aside>
   );
 }
