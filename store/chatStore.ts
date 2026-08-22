@@ -17,36 +17,23 @@ interface ChatStore {
   conversations: Conversation[];
   activeConversation: number | null;
   loadingConversations: boolean;
-
   createChat: () => Promise<void>;
   loadConversations: () => Promise<void>;
   selectConversation: (id: number) => Promise<void>;
   setActiveChat: (id: number) => void;
-
   deleteChat: (id: number) => Promise<void>;
-
   togglePinChat: (id: number) => Promise<void>;
-
   addMessage: (message: Message) => void;
   updateChatTitle: (id: number, title: string) => void;
-
   updateMessage: (messageId: number, content: string) => void;
   replaceMessage: (messageId: number, content: string) => void;
   clearMessage: (messageId: number) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
-  // =====================================================
-  // INITIAL STATE
-  // =====================================================
-
   conversations: [],
   activeConversation: null,
   loadingConversations: false,
-
-  // =====================================================
-  // LOAD CONVERSATIONS
-  // =====================================================
 
   loadConversations: async () => {
     set({
@@ -56,10 +43,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     try {
       const conversations = await getConversations();
 
-      // -----------------------------------------------
-      // EXISTING CONVERSATIONS
-      // -----------------------------------------------
-
+      // Existing conversation
       if (conversations.length > 0) {
         set({
           conversations,
@@ -69,20 +53,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      // -----------------------------------------------
-      // NO CONVERSATIONS
+      // no conversation
       // Create first conversation automatically
-      // -----------------------------------------------
 
       console.log("No conversations found. Creating New Chat...");
-
       const newConversation = await createConversation("New Chat");
-
       set({
         conversations: [newConversation],
         activeConversation: newConversation.id,
       });
-
       console.log("New conversation created:", newConversation.id);
     } catch (error) {
       console.error("Failed to load conversations:", error);
@@ -98,10 +77,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // =====================================================
-  // SELECT CONVERSATION
-  // =====================================================
-
+  // select converation
   selectConversation: async (id: number) => {
     // Immediately update active conversation
     set({
@@ -120,10 +96,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       console.error("Failed to load conversation:", error);
     }
   },
-
-  // =====================================================
-  // SET ACTIVE CHAT
-  // =====================================================
+  // set activate chat
 
   setActiveChat: (id: number) => {
     set({
@@ -131,9 +104,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  // =====================================================
-  // CREATE CHAT
-  // =====================================================
+  // create chat
 
   createChat: async () => {
     try {
@@ -151,9 +122,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // =====================================================
-  // ADD MESSAGE
-  // =====================================================
+  // add Message
 
   addMessage: (message: Message) => {
     const activeConversation = get().activeConversation;
@@ -175,36 +144,25 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         const isFirstUserMessage =
           message.role === "user" &&
           chat.messages.filter((msg) => msg.role === "user").length === 0;
-
         let title = chat.title;
-
-        // -----------------------------------------
         // Generate title from first user message
-        // -----------------------------------------
-
         if (isFirstUserMessage && (chat.title === "New Chat" || !chat.title)) {
           title = message.content.trim().slice(0, 40);
 
           if (message.content.trim().length > 40) {
             title += "...";
           }
-
           newTitle = title;
         }
 
         return {
           ...chat,
-
           title,
-
           messages: [...chat.messages, message],
         };
       }),
     }));
-
-    // -----------------------------------------------
     // Persist generated title
-    // -----------------------------------------------
 
     if (newTitle) {
       updateConversationTitle(activeConversation, newTitle).catch((error) => {
@@ -213,10 +171,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // =====================================================
-  // UPDATE CHAT TITLE
-  // =====================================================
-
+  // update chat title
   updateChatTitle: (id: number, title: string) => {
     set((state) => ({
       conversations: state.conversations.map((chat) =>
@@ -230,9 +185,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }));
   },
 
-  // =====================================================
-  // UPDATE MESSAGE
-  // =====================================================
+  // update Message
 
   updateMessage: (messageId: number, chunk: string) => {
     set((state) => ({
@@ -257,9 +210,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }));
   },
 
-  // =====================================================
-  // REPLACE MESSAGE
-  // =====================================================
+  // replace message
 
   replaceMessage: (messageId: number, content: string) => {
     set((state) => ({
@@ -284,10 +235,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }));
   },
 
-  // =====================================================
-  // CLEAR MESSAGE
-  // =====================================================
-
+  // clear Message
   clearMessage: (messageId: number) => {
     set((state) => ({
       conversations: state.conversations.map((chat) => {
@@ -311,13 +259,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }));
   },
 
-  // =====================================================
-  // DELETE CHAT
-  // =====================================================
+  // delete chat
 
   deleteChat: async (id: number) => {
     const state = get();
-
     // Check whether conversation exists in frontend
     const conversationExists = state.conversations.some(
       (chat) => chat.id === id,
@@ -330,10 +275,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
 
     try {
-      // -----------------------------------------------
-      // Delete from backend
-      // -----------------------------------------------
-
       await deleteConversation(id);
     } catch (error) {
       console.error("Backend delete failed:", error);
@@ -353,22 +294,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         throw error;
       }
     }
-
-    // -----------------------------------------------
     // Remove from Zustand
-    // -----------------------------------------------
-
     set((state) => {
       const remainingChats = state.conversations.filter(
         (chat) => chat.id !== id,
       );
-
       let activeConversation = state.activeConversation;
-
-      // ---------------------------------------------
       // If deleted chat was active
-      // ---------------------------------------------
-
       if (activeConversation === id) {
         activeConversation =
           remainingChats.length > 0 ? remainingChats[0].id : null;
@@ -379,14 +311,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         activeConversation,
       };
     });
-
-    // -----------------------------------------------
     // If no conversations remain,
     // automatically create a new chat
-    // -----------------------------------------------
-
     const remainingChats = get().conversations;
-
     if (remainingChats.length === 0) {
       try {
         const newConversation = await createConversation("New Chat");
@@ -402,10 +329,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
     }
   },
-  // =====================================================
-  // PIN CHAT
-  // =====================================================
-
+  // pin chat
   togglePinChat: async (id: number) => {
     try {
       const result = await togglePinConversation(id);
