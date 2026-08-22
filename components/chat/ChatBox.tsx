@@ -175,10 +175,7 @@ export default function ChatBox() {
 
     await handleNormalChat(text);
   }
-
-  // ==================================================
   // PDF UPLOAD
-  // ==================================================
 
   async function handlePDFUpload(text: string, file: File) {
     const conversationId = getConversationId();
@@ -306,11 +303,7 @@ You can now ask questions about this PDF.
       setLoading(false);
     }
   }
-
-  // ==================================================
   // PDF QUESTION
-  // ==================================================
-
   async function askPDFQuestion(
     pdfId: number,
     question: string,
@@ -369,9 +362,7 @@ You can now ask questions about this PDF.
     }
   }
 
-  // ==================================================
   // NORMAL CHAT
-  // ==================================================
 
   async function handleNormalChat(text: string) {
     const cleanText = text.trim();
@@ -384,18 +375,14 @@ You can now ask questions about this PDF.
 
     if (conversationId === null) {
       console.error("No active conversation.");
-
       return;
     }
 
     // Temporary user message
     const userMessage: Message = {
       id: createTempMessageId(),
-
       conversation_id: conversationId,
-
       role: "user",
-
       content: cleanText,
     };
 
@@ -406,11 +393,8 @@ You can now ask questions about this PDF.
 
     const aiMessage: Message = {
       id: aiMessageId,
-
       conversation_id: conversationId,
-
       role: "assistant",
-
       content: "",
     };
 
@@ -418,15 +402,70 @@ You can now ask questions about this PDF.
 
     setLoading(true);
 
+    let hasReceivedResponse = false;
+
+    // Show slow-response message after 10 seconds
+    const slowResponseTimer = setTimeout(() => {
+      if (!hasReceivedResponse) {
+        useChatStore
+          .getState()
+          .replaceMessage(
+            aiMessageId,
+            "⏳ The AI is taking longer than expected. Please wait...",
+          );
+      }
+    }, 10000);
+
     try {
       await streamMessage(cleanText, conversationId, (chunk) => {
+        if (!chunk) {
+          return;
+        }
+
+        // First chunk arrived
+        if (!hasReceivedResponse) {
+          hasReceivedResponse = true;
+
+          // IMPORTANT:
+          // Replace the slow/temporary message with the first
+          // actual AI chunk.
+          useChatStore.getState().replaceMessage(aiMessageId, chunk);
+
+          return;
+        }
+
+        // Remaining chunks
         useChatStore.getState().updateMessage(aiMessageId, chunk);
       });
+
+      // Check whether AI actually returned anything
+      const state = useChatStore.getState();
+
+      const currentChat = state.conversations.find(
+        (chat) => chat.id === conversationId,
+      );
+
+      const finalMessage = currentChat?.messages.find(
+        (message) => message.id === aiMessageId,
+      );
+
+      if (!hasReceivedResponse || !finalMessage?.content?.trim()) {
+        state.replaceMessage(
+          aiMessageId,
+          "⚠️ I couldn't generate a response. Please try again.",
+        );
+      }
     } catch (error) {
       console.error("Chat streaming error:", error);
 
-      replaceMessage(aiMessageId, "❌ Something went wrong. Please try again.");
+      useChatStore
+        .getState()
+        .replaceMessage(
+          aiMessageId,
+          "❌ Something went wrong while generating the response. Please try again.",
+        );
     } finally {
+      clearTimeout(slowResponseTimer);
       setLoading(false);
     }
   }

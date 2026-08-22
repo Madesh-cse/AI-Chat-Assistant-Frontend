@@ -6,6 +6,31 @@ import { useRouter } from "next/navigation";
 
 import { useAuthStore } from "@/store/authStore";
 
+function Spinner() {
+  return (
+    <svg
+      className="h-4 w-4 animate-spin"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="3.5"
+      />
+      <path
+        className="opacity-90"
+        fill="currentColor"
+        d="M22 12c0-5.52-4.48-10-10-10v3.5C16.14 5.5 18.5 8.36 18.5 12H22z"
+      />
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -46,39 +71,45 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#212121] flex items-center justify-center px-4">
-      <div className="w-full max-w-105">
-        {/* Wordmark */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#D97757] flex items-center justify-center">
-              <span className="text-white text-sm font-medium" style={{ fontFamily: "Georgia, serif" }}>
+    <main className="relative min-h-screen overflow-hidden bg-[#171717] flex items-center justify-center px-4">
+      {/* Ambient glow — purely decorative, sits behind everything */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute left-1/2 top-[-10%] h-120 w-120 -translate-x-1/2 rounded-full bg-[#D97757]/1200 blur-[120px]" />
+        <div className="absolute bottom-[-15%] right-[-10%] h-90 w-90 rounded-full bg-[#D97757]/6 blur-[110px]" />
+      </div>
+
+      <div className="relative w-full max-w-105">
+        <div className="rounded-2xl border border-[#333] bg-[#212121]/90 px-8 pb-9 pt-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-sm">
+          {/* Header — logo inline with the heading, not floating above the card */}
+          <div className="mb-7 flex flex-col items-center text-center">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#D97757] shadow-[0_4px_16px_-2px_rgba(217,119,87,0.5)]">
+              <span
+                className="text-white text-lg font-medium"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
                 C
               </span>
             </div>
-            <span className="text-white text-lg font-medium tracking-tight">
-              CacheAI
-            </span>
-          </div>
-        </div>
 
-        <div className="bg-[#2a2a2a] border border-[#3a3a3a] rounded-2xl px-8 py-10 shadow-xl">
-          <div className="text-center mb-8">
             <h1
-              className="text-[28px] leading-tight text-white"
+              className="text-[26px] leading-tight text-white"
               style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
               Welcome back
             </h1>
 
-            <p className="text-gray-400 mt-2.5 text-[15px]">
-              Sign in to continue to CacheAI
+            <p className="mt-2 text-[14.5px] text-gray-400">
+              Sign in to continue to{" "}
+              <span className="text-gray-300">CacheAI</span>
             </p>
           </div>
 
           {error && (
-            <div className="mb-5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-              {error}
+            <div className="mb-5 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              <span>{error}</span>
             </div>
           )}
 
@@ -89,9 +120,10 @@ export default function LoginPage() {
               className="
                 w-full flex items-center justify-center gap-2.5
                 rounded-lg border border-[#3a3a3a]
-                bg-[#303030] py-2.5
+                bg-[#2a2a2a] py-2.5
                 text-sm font-medium text-white
-                transition hover:bg-[#383838]
+                transition hover:bg-[#323232] hover:border-[#454545]
+                active:scale-[0.99]
               "
             >
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -105,15 +137,12 @@ export default function LoginPage() {
           </div>
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="h-px flex-1 bg-[#3a3a3a]" />
+            <div className="h-px flex-1 bg-[#333]" />
             <span className="text-xs text-gray-500">or</span>
-            <div className="h-px flex-1 bg-[#3a3a3a]" />
+            <div className="h-px flex-1 bg-[#333]" />
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm text-gray-300 mb-1.5 font-medium">
                 Email
@@ -122,16 +151,15 @@ export default function LoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
+                disabled={loading}
                 className="
                   w-full
                   rounded-lg
                   border
-                  border-[#444]
-                  bg-[#303030]
+                  border-[#3d3d3d]
+                  bg-[#2a2a2a]
                   px-3.5
                   py-2.5
                   text-[15px]
@@ -142,6 +170,7 @@ export default function LoginPage() {
                   focus:border-[#D97757]
                   focus:ring-2
                   focus:ring-[#D97757]/20
+                  disabled:opacity-60
                 "
               />
             </div>
@@ -162,16 +191,15 @@ export default function LoginPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
+                disabled={loading}
                 className="
                   w-full
                   rounded-lg
                   border
-                  border-[#444]
-                  bg-[#303030]
+                  border-[#3d3d3d]
+                  bg-[#2a2a2a]
                   px-3.5
                   py-2.5
                   text-[15px]
@@ -182,6 +210,7 @@ export default function LoginPage() {
                   focus:border-[#D97757]
                   focus:ring-2
                   focus:ring-[#D97757]/20
+                  disabled:opacity-60
                 "
               />
             </div>
@@ -190,19 +219,27 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="
+                flex
                 w-full
+                items-center
+                justify-center
+                gap-2
                 rounded-lg
                 bg-[#D97757]
                 py-2.5
+                text-[15px]
                 font-medium
                 text-white
-                text-[15px]
+                shadow-[0_4px_14px_-4px_rgba(217,119,87,0.45)]
                 transition
                 hover:bg-[#c76a4c]
-                disabled:opacity-50
+                active:scale-[0.99]
                 disabled:cursor-not-allowed
+                disabled:opacity-70
+                disabled:active:scale-100
               "
             >
+              {loading && <Spinner />}
               {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
