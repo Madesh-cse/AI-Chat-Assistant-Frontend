@@ -11,7 +11,7 @@ interface Props {
   voiceMode: boolean;
 }
 
-export default function ChatArea({ messages, loading, voiceMode,}: Props) {
+export default function ChatArea({ messages, loading, voiceMode }: Props) {
   const bottomRef = useAutoScroll(messages);
 
   return (
@@ -34,12 +34,18 @@ export default function ChatArea({ messages, loading, voiceMode,}: Props) {
         {/* Messages */}
 
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} voiceMode={voiceMode} />
+          <MessageBubble
+            key={message.id}
+            message={message}
+            voiceMode={voiceMode}
+          />
         ))}
 
         {/* AI typing */}
 
-        {loading && <TypingIndicator />}
+        {loading && messages[messages.length - 1]?.role !== "assistant" && (
+          <TypingIndicator />
+        )}
 
         {/* Auto scroll target */}
 

@@ -239,11 +239,17 @@ export default function ChatBox() {
       const formData = new FormData();
 
       formData.append("file", file);
-
       formData.append("conversation_id", String(conversationId));
-
+      
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
       const response = await fetch(`${API_URL}/pdf/upload`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 
@@ -311,11 +317,16 @@ You can now ask questions about this PDF.
   ) {
     try {
       replaceMessage(messageId, "🤔 Searching the PDF...");
+      const token = localStorage.getItem("access_token");
 
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
       const response = await fetch(`${API_URL}/pdf/ask`, {
         method: "POST",
 
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
 
