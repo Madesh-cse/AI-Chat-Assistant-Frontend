@@ -26,110 +26,49 @@ export interface PDFQuestionResponse {
   question: string;
   answer: string;
 }
+
+// AUTH HELPER
+
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 // UPLOAD PDF
 
 export async function uploadPDF(
   file: File,
-  conversationId: number
+  conversationId: number,
 ): Promise<PDFUploadResponse> {
-
   const formData = new FormData();
 
-  // PDF file
-  formData.append(
-    "file",
-    file
-  );
+  formData.append("file", file);
+  formData.append("conversation_id", String(conversationId));
 
-  // Required by FastAPI:
-  // conversation_id: int = Form(...)
-  formData.append(
-    "conversation_id",
-    String(conversationId)
-  );
-
-  const response = await fetch(
-    `${API_URL}/pdf/upload`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+  const response = await fetch(`${API_URL}/pdf/upload`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: formData,
+  });
 
   if (!response.ok) {
-
     let errorMessage = "PDF upload failed";
 
     try {
-
       const errorData = await response.json();
 
       if (typeof errorData?.detail === "string") {
-
         errorMessage = errorData.detail;
-
       } else if (errorData?.detail) {
-
-        errorMessage = JSON.stringify(
-          errorData.detail
-        );
-
+        errorMessage = JSON.stringify(errorData.detail);
       }
-
-    } catch {
-
-      try {
-
-        const text = await response.text();
-
-        if (text) {
-          errorMessage = text;
-        }
-
-      } catch {
-        // Keep default error message
-      }
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  const data =
-    (await response.json()) as PDFUploadResponse;
-
-  return data;
-}
-
-// GET PDF SUMMARY
-
-export async function getPDFSummary(
-  pdfId: number
-): Promise<PDFSummaryResponse> {
-
-  const response = await fetch(
-    `${API_URL}/pdf/${pdfId}/summary`
-  );
-
-  if (!response.ok) {
-
-    let errorMessage =
-      "Failed to generate PDF summary";
-
-    try {
-
-      const errorData = await response.json();
-
-      if (typeof errorData?.detail === "string") {
-
-        errorMessage = errorData.detail;
-
-      } else if (errorData?.detail) {
-
-        errorMessage = JSON.stringify(
-          errorData.detail
-        );
-      }
-
     } catch {
       // Keep default error
     }
@@ -137,54 +76,71 @@ export async function getPDFSummary(
     throw new Error(errorMessage);
   }
 
-  return (
-    (await response.json()) as PDFSummaryResponse
-  );
+  return (await response.json()) as PDFUploadResponse;
+}
+
+// GET PDF SUMMARY
+
+export async function getPDFSummary(
+  pdfId: number,
+): Promise<PDFSummaryResponse> {
+  const response = await fetch(`${API_URL}/pdf/${pdfId}/summary`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    let errorMessage = "Failed to generate PDF summary";
+
+    try {
+      const errorData = await response.json();
+
+      if (typeof errorData?.detail === "string") {
+        errorMessage = errorData.detail;
+      } else if (errorData?.detail) {
+        errorMessage = JSON.stringify(errorData.detail);
+      }
+    } catch {
+      // Keep default error
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return (await response.json()) as PDFSummaryResponse;
 }
 
 // ASK QUESTION ABOUT PDF
 
 export async function askPDFQuestion(
   pdfId: number,
-  question: string
+  question: string,
 ): Promise<PDFQuestionResponse> {
+  const response = await fetch(`${API_URL}/pdf/ask`, {
+    method: "POST",
 
-  const response = await fetch(
-    `${API_URL}/pdf/ask`,
-    {
-      method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
 
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({
-        pdf_id: pdfId,
-        question,
-      }),
-    }
-  );
+    body: JSON.stringify({
+      pdf_id: pdfId,
+      question: question.trim(),
+    }),
+  });
 
   if (!response.ok) {
-
-    let errorMessage =
-      "Failed to ask PDF question";
+    let errorMessage = "Failed to ask PDF question";
 
     try {
-
       const errorData = await response.json();
 
       if (typeof errorData?.detail === "string") {
-
         errorMessage = errorData.detail;
-
       } else if (errorData?.detail) {
-
-        errorMessage = JSON.stringify(
-          errorData.detail
-        );
+        errorMessage = JSON.stringify(errorData.detail);
       }
-
     } catch {
       // Keep default error
     }
@@ -192,7 +148,5 @@ export async function askPDFQuestion(
     throw new Error(errorMessage);
   }
 
-  return (
-    (await response.json()) as PDFQuestionResponse
-  );
+  return (await response.json()) as PDFQuestionResponse;
 }
