@@ -40,6 +40,7 @@ export default function ChatBox() {
   } = useChatStore();
 
   const [loading, setLoading] = useState(false);
+  const [slowResponse, setSlowResponse] = useState(false);
   const [voiceMode, setVoiceMode] = useState(false);
   const [userName, setUserName] = useState("User");
   // TEMP MESSAGE ID
@@ -442,17 +443,18 @@ You can now ask questions about this PDF.
 
     setLoading(true);
 
+    setSlowResponse(false);
+
     let hasReceivedResponse = false;
 
-    // Show slow-response message after 10 seconds
+    // Flip the slow-response flag after 10 seconds instead of
+    // overwriting the message with plain text - the TypingIndicator
+    // reads this flag and swaps its label, so the sparkle/animation
+    // stays visible the whole time instead of being replaced by a
+    // static bubble.
     const slowResponseTimer = setTimeout(() => {
       if (!hasReceivedResponse) {
-        useChatStore
-          .getState()
-          .replaceMessage(
-            aiMessageId,
-            "⏳ The AI is taking longer than expected. Please wait...",
-          );
+        setSlowResponse(true);
       }
     }, 10000);
 
@@ -465,6 +467,8 @@ You can now ask questions about this PDF.
         // First chunk arrived
         if (!hasReceivedResponse) {
           hasReceivedResponse = true;
+
+          setSlowResponse(false);
 
           // IMPORTANT:
           // Replace the slow/temporary message with the first
@@ -507,6 +511,7 @@ You can now ask questions about this PDF.
     } finally {
       clearTimeout(slowResponseTimer);
       setLoading(false);
+      setSlowResponse(false);
     }
   }
 
@@ -523,6 +528,7 @@ You can now ask questions about this PDF.
               messages={messages}
               loading={loading}
               voiceMode={voiceMode}
+              slowResponse={slowResponse}
             />
 
             <ChatInput

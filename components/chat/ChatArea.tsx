@@ -9,10 +9,25 @@ interface Props {
   messages: Message[];
   loading: boolean;
   voiceMode: boolean;
+  slowResponse?: boolean;
 }
 
-export default function ChatArea({ messages, loading, voiceMode }: Props) {
+export default function ChatArea({
+  messages,
+  loading,
+  voiceMode,
+  slowResponse = false,
+}: Props) {
   const bottomRef = useAutoScroll(messages);
+  const lastMessage = messages[messages.length - 1];
+  const showTypingIndicator =
+    loading &&
+    lastMessage?.role === "assistant" &&
+    !lastMessage.content?.trim();
+
+  const visibleMessages = showTypingIndicator
+    ? messages.slice(0, -1)
+    : messages;
 
   return (
     <div
@@ -33,7 +48,7 @@ export default function ChatArea({ messages, loading, voiceMode }: Props) {
       >
         {/* Messages */}
 
-        {messages.map((message) => (
+        {visibleMessages.map((message) => (
           <MessageBubble
             key={message.id}
             message={message}
@@ -43,8 +58,14 @@ export default function ChatArea({ messages, loading, voiceMode }: Props) {
 
         {/* AI typing */}
 
-        {loading && messages[messages.length - 1]?.role !== "assistant" && (
-          <TypingIndicator />
+        {showTypingIndicator && (
+          <TypingIndicator
+            label={
+              slowResponse
+                ? "Still thinking, this is taking longer than usual"
+                : "Thinking"
+            }
+          />
         )}
 
         {/* Auto scroll target */}

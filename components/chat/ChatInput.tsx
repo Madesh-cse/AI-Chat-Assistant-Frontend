@@ -50,9 +50,12 @@ function formatFileSize(bytes: number): string {
 // Pasting more than this many characters, or this many lines, turns
 // the paste into a "Pasted text" card instead of inserting it inline
 // into the textarea - mirrors Claude's behavior for large pastes.
+// Small snippets (a few lines, a short paragraph) stay as normal
+// inline text in the textarea - only genuinely large content becomes
+// a card.
 
-const PASTE_CHAR_THRESHOLD = 600;
-const PASTE_LINE_THRESHOLD = 8;
+const PASTE_CHAR_THRESHOLD = 1500;
+const PASTE_LINE_THRESHOLD = 15;
 
 interface PastedContent {
   text: string;
