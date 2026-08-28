@@ -149,6 +149,35 @@ export default function ChatBox() {
     return fallback;
   }
 
+  // TIME-BASED GREETING
+
+  function getGreeting(): string {
+    const hour = new Date().getHours();
+
+    if (hour >= 2 && hour < 5) {
+      return "Burning the midnight oil";
+    }
+
+    if (hour >= 5 && hour < 8) {
+      return "You're up early";
+    }
+
+    if (hour >= 8 && hour < 12) {
+      return "Good morning";
+    }
+
+    if (hour >= 12 && hour < 17) {
+      return "Good afternoon";
+    }
+
+    if (hour >= 17 && hour < 21) {
+      return "Good evening";
+    }
+
+    // 21:00 - 02:00
+    return "Good night";
+  }
+
   // SEND
 
   async function handleSend(
@@ -240,7 +269,7 @@ export default function ChatBox() {
 
       formData.append("file", file);
       formData.append("conversation_id", String(conversationId));
-      
+
       const token = localStorage.getItem("access_token");
       if (!token) {
         throw new Error("Not authenticated");
@@ -507,7 +536,7 @@ You can now ask questions about this PDF.
           <div className="flex flex-1 flex-col items-center justify-center px-4">
             <div className="w-full max-w-3xl -mt-16">
               <h1 className="text-3xl font-semibold text-center mb-8">
-                Welcome {userName}, what do you want to do?
+                {getGreeting()}, {userName}. What do you want to do?
               </h1>
 
               <ChatInput

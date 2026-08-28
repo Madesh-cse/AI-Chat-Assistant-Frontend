@@ -27,6 +27,61 @@ interface ChatInputProps {
   onVoiceModeChange: (enabled: boolean) => void;
 }
 
+// FILE SIZE FORMATTER
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  const kb = bytes / 1024;
+
+  if (kb < 1024) {
+    return `${kb.toFixed(0)} KB`;
+  }
+
+  const mb = kb / 1024;
+
+  return `${mb.toFixed(1)} MB`;
+}
+
+// PASTE-TO-ATTACHMENT THRESHOLDS
+//
+// Pasting more than this many characters, or this many lines, turns
+// the paste into a "Pasted text" card instead of inserting it inline
+// into the textarea - mirrors Claude's behavior for large pastes.
+
+const PASTE_CHAR_THRESHOLD = 600;
+const PASTE_LINE_THRESHOLD = 8;
+
+interface PastedContent {
+  text: string;
+  lineCount: number;
+  looksLikeCode: boolean;
+}
+
+// Light heuristic to label the card "Pasted code" vs "Pasted text" -
+// not meant to be a real language detector, just a nicer label.
+
+function analyzePastedText(raw: string): PastedContent {
+  const lineCount = raw.split("\n").length;
+
+  const codeSignals = [
+    /[{};]/, // braces / semicolons
+    /^\s*(import|export|function|const|let|var|class|def|return)\b/m,
+    /=>/,
+    /^\s{2,}\S/m, // indentation
+  ];
+
+  const looksLikeCode = codeSignals.some((pattern) => pattern.test(raw));
+
+  return {
+    text: raw,
+    lineCount,
+    looksLikeCode,
+  };
+}
+
 export default function ChatInput({
   onSend,
   loading,
@@ -35,6 +90,10 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [pastedContent, setPastedContent] = useState<PastedContent | null>(
+    null,
+  );
+  const [pastedPreviewOpen, setPastedPreviewOpen] = useState(false);
   const [pluginOpen, setPluginOpen] = useState(false);
   const [stackOverflowEnabled, setStackOverflowEnabled] = useState(false);
   const [notionEnabled, setnotionEnabled] = useState(false);
@@ -67,15 +126,26 @@ export default function ChatInput({
   function submit() {
     const cleanText = text.trim();
 
-    if (!cleanText && !file) {
+    if (!cleanText && !file && !pastedContent) {
       return;
     }
 
-    onSend(cleanText, file, stackOverflowEnabled, notionEnabled);
+    // Fold the pasted block back into the outgoing message (wrapped
+    // as a fenced block) so the backend still just sees plain text -
+    // only the composer UI treats it as a separate attachment.
+    const finalText = pastedContent
+      ? [cleanText, "```\n" + pastedContent.text + "\n```"]
+          .filter(Boolean)
+          .join("\n\n")
+      : cleanText;
+
+    onSend(finalText, file, stackOverflowEnabled, notionEnabled);
 
     setText("");
 
     setFile(null);
+
+    setPastedContent(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -100,6 +170,43 @@ export default function ChatInput({
     requestAnimationFrame(() => {
       resizeTextarea();
     });
+  }
+
+  function handlePaste(event: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const pastedText = event.clipboardData.getData("text");
+
+    if (!pastedText) {
+      return;
+    }
+
+    const lineCount = pastedText.split("\n").length;
+
+    const isLargePaste =
+      pastedText.length > PASTE_CHAR_THRESHOLD ||
+      lineCount > PASTE_LINE_THRESHOLD;
+
+    if (!isLargePaste) {
+      // Small paste - let the browser insert it inline as normal.
+      return;
+    }
+
+    // Large paste - keep it out of the textarea and show it as a
+    // collapsed attachment card instead.
+    event.preventDefault();
+
+    setPastedContent(analyzePastedText(pastedText));
+
+    requestAnimationFrame(() => {
+      textInputRef.current?.focus();
+    });
+  }
+
+  function removePastedContent() {
+    setPastedContent(null);
+
+    setPastedPreviewOpen(false);
+
+    textInputRef.current?.focus();
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -189,49 +296,254 @@ export default function ChatInput({
   return (
     <div className="bg-[#212121] pt-2">
       <div className="max-w-3xl mx-auto px-3">
-        {file && (
-          <div className="mb-2">
+        {(file || pastedContent) && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {file && (
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-3
+                  bg-[#2a2a2a]
+                  rounded-xl
+                  px-3
+                  py-2.5
+                  border
+                  border-[#3f3f3f]
+                  shadow-sm
+                  max-w-full
+                "
+              >
+                {/* File type icon */}
+
+                <div
+                  className="
+                    h-10
+                    w-10
+                    shrink-0
+                    rounded-lg
+                    bg-[#c0392b]
+                    flex
+                    items-center
+                    justify-center
+                  "
+                >
+                  <FileText size={18} className="text-white" />
+                </div>
+
+                {/* Name + type/size label */}
+
+                <div className="min-w-0 flex flex-col">
+                  <span
+                    className="
+                      text-sm
+                      text-white
+                      font-medium
+                      truncate
+                      max-w-52
+                    "
+                    title={file.name}
+                  >
+                    {file.name}
+                  </span>
+
+                  <span className="text-xs text-gray-400">
+                    PDF · {formatFileSize(file.size)}
+                  </span>
+                </div>
+
+                {/* Remove button */}
+
+                <button
+                  type="button"
+                  onClick={removeFile}
+                  disabled={loading}
+                  title="Remove PDF"
+                  className="
+                    ml-1
+                    h-6
+                    w-6
+                    shrink-0
+                    flex
+                    items-center
+                    justify-center
+                    rounded-full
+                    text-gray-400
+                    hover:bg-[#3a3a3a]
+                    hover:text-white
+                    transition
+                    disabled:opacity-50
+                  "
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
+            {pastedContent && (
+              <div
+                onClick={() => setPastedPreviewOpen(true)}
+                className="
+                  inline-flex
+                  items-center
+                  gap-3
+                  bg-[#2a2a2a]
+                  rounded-xl
+                  px-3
+                  py-2.5
+                  border
+                  border-[#3f3f3f]
+                  shadow-sm
+                  max-w-full
+                  cursor-pointer
+                  hover:border-[#555]
+                  transition
+                "
+              >
+                {/* Pasted content icon */}
+
+                <div
+                  className="
+                    h-10
+                    w-10
+                    shrink-0
+                    rounded-lg
+                    bg-[#2f5d8a]
+                    flex
+                    items-center
+                    justify-center
+                  "
+                >
+                  <FileText size={18} className="text-white" />
+                </div>
+
+                {/* Label + line count */}
+
+                <div className="min-w-0 flex flex-col">
+                  <span className="text-sm text-white font-medium truncate max-w-52">
+                    {pastedContent.looksLikeCode
+                      ? "Pasted code"
+                      : "Pasted text"}
+                  </span>
+
+                  <span className="text-xs text-gray-400">
+                    {pastedContent.lineCount} lines ·{" "}
+                    {pastedContent.text.length.toLocaleString()} chars
+                  </span>
+                </div>
+
+                {/* Remove button */}
+
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+
+                    removePastedContent();
+                  }}
+                  disabled={loading}
+                  title="Remove pasted content"
+                  className="
+                    ml-1
+                    h-6
+                    w-6
+                    shrink-0
+                    flex
+                    items-center
+                    justify-center
+                    rounded-full
+                    text-gray-400
+                    hover:bg-[#3a3a3a]
+                    hover:text-white
+                    transition
+                    disabled:opacity-50
+                  "
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {pastedPreviewOpen && pastedContent && (
+          <div
+            className="
+              fixed
+              inset-0
+              z-50
+              flex
+              items-center
+              justify-center
+              bg-black/60
+              px-4
+            "
+            onClick={() => setPastedPreviewOpen(false)}
+          >
             <div
+              onClick={(event) => event.stopPropagation()}
               className="
-                inline-flex
-                items-center
-                gap-2
-                bg-[#303030]
-                text-white
-                rounded-lg
-                px-3
-                py-2
-                text-sm
+                w-full
+                max-w-2xl
+                max-h-[70vh]
+                flex
+                flex-col
+                bg-[#252525]
+                rounded-xl
                 border
-                border-[#444]
+                border-[#3f3f3f]
+                shadow-2xl
+                overflow-hidden
               "
             >
-              <FileText size={18} className="text-gray-300" />
-
-              <span
+              <div
                 className="
-                  max-w-62.5
-                  truncate
+                  flex
+                  items-center
+                  justify-between
+                  px-4
+                  py-3
+                  border-b
+                  border-[#3a3a3a]
                 "
               >
-                {file.name}
-              </span>
+                <p className="text-sm font-medium text-white">
+                  {pastedContent.looksLikeCode ? "Pasted code" : "Pasted text"}
+                </p>
 
-              <button
-                type="button"
-                onClick={removeFile}
-                disabled={loading}
-                title="Remove PDF"
+                <button
+                  type="button"
+                  onClick={() => setPastedPreviewOpen(false)}
+                  className="
+                    h-7
+                    w-7
+                    flex
+                    items-center
+                    justify-center
+                    rounded-full
+                    text-gray-400
+                    hover:bg-[#3a3a3a]
+                    hover:text-white
+                    transition
+                  "
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <pre
                 className="
-                  ml-1
-                  text-gray-400
-                  hover:text-white
-                  transition
-                  disabled:opacity-50
+                  overflow-auto
+                  px-4
+                  py-3
+                  text-xs
+                  text-gray-200
+                  font-mono
+                  whitespace-pre-wrap
                 "
               >
-                <X size={16} />
-              </button>
+                {pastedContent.text}
+              </pre>
             </div>
           </div>
         )}
@@ -265,6 +577,7 @@ export default function ChatInput({
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
             title="Upload PDF"
+            aria-disabled
             className="
               flex
               items-center
@@ -533,6 +846,7 @@ export default function ChatInput({
             value={text}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             disabled={loading}
             rows={1}
             placeholder={
