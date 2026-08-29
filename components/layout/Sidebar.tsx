@@ -29,6 +29,14 @@ type Conversation = ReturnType<
   typeof useChatStore.getState
 >["conversations"][number];
 
+interface SidebarProps {
+  // Controls the off-canvas drawer on small screens (< md). Owned by
+  // the parent (ChatBox) so the mobile menu trigger can live in the
+  // header row instead of floating over content.
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
 // RECENCY GROUPING
 //
 // Mirrors Claude's own "Today / Yesterday / Previous 7 Days / Older"
@@ -85,7 +93,10 @@ function groupByRecency(chats: Conversation[]) {
   return groups.filter((group) => group.chats.length > 0);
 }
 
-export default function Sidebar() {
+export default function Sidebar({
+  mobileOpen = false,
+  onMobileClose = () => {},
+}: SidebarProps) {
   const {
     conversations,
     activeConversation,
@@ -141,11 +152,22 @@ export default function Sidebar() {
 
     try {
       await createChat();
+
+      // Close the mobile drawer after a successful create - no-op on
+      // desktop where onMobileClose is a default noop / md overrides
+      // the transform anyway.
+      onMobileClose();
     } catch (error) {
       console.error("Failed to create chat:", error);
     } finally {
       setCreatingChat(false);
     }
+  }
+
+  function handleSelectChat(id: number) {
+    setActiveChat(id);
+
+    onMobileClose();
   }
 
   function handleRequestDelete(
@@ -198,6 +220,13 @@ export default function Sidebar() {
 
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
+  // Elements that collapse away on desktop (md+) when `collapsed` is
+  // true, but must always stay visible on mobile - since on mobile
+  // the sidebar is a full-width overlay drawer, not an icon rail.
+  // Default (no breakpoint prefix) = visible; md:hidden only kicks in
+  // once we're at md+ and collapsed is true.
+  const hideWhenCollapsed = collapsed ? "md:hidden" : "";
+
   function renderConversation(chat: (typeof conversations)[number]) {
     const isActive = activeConversation === chat.id;
 
@@ -220,7 +249,7 @@ export default function Sidebar() {
         <button
           type="button"
           disabled={isDeleting}
-          onClick={() => setActiveChat(chat.id)}
+          onClick={() => handleSelectChat(chat.id)}
           className={`
             flex
             items-center
@@ -296,42 +325,64 @@ export default function Sidebar() {
   }
 
   return (
-    <aside
-      className={`
-        h-screen
-        flex
-        flex-col
-        bg-[#171717]
-        text-[#ececec]
-        relative
-        shrink-0
-        transition-[width]
-        duration-200
-        ease-in-out
-        overflow-hidden
+    <>
+      {/* Backdrop - mobile only, closes the drawer on tap outside */}
 
-        ${collapsed ? "w-17" : "w-72"}
-      `}
-    >
-      <div
-        className="
-          shrink-0
-          p-3
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+
+      <aside
+        className={`
+          fixed
+          inset-y-0
+          left-0
+          z-40
+          md:static
+          md:z-auto
+          h-screen
+          flex
+          flex-col
           bg-[#171717]
-          z-20
-        "
+          text-[#ececec]
+          shrink-0
+          transition-transform
+          md:transition-[width]
+          duration-200
+          ease-in-out
+          overflow-hidden
+
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+
+          w-72
+          ${collapsed ? "md:w-17" : "md:w-72"}
+        `}
       >
         <div
-          className={`
-            flex
-            items-center
-            mb-2
-
-            ${collapsed ? "justify-center" : "justify-between"}
-          `}
+          className="
+            shrink-0
+            p-3
+            bg-[#171717]
+            z-20
+          "
         >
-          {!collapsed && (
-            <div className="flex items-center gap-2 min-w-0 px-1">
+          <div
+            className={`
+              flex
+              items-center
+              mb-2
+              justify-between
+
+              ${collapsed ? "md:justify-center" : ""}
+            `}
+          >
+            <div
+              className={`flex items-center gap-2 min-w-0 px-1 ${hideWhenCollapsed}`}
+            >
               <div
                 className="
                   h-7
@@ -351,168 +402,203 @@ export default function Sidebar() {
               </div>
               <span className="font-medium text-sm truncate">CacheAI</span>
             </div>
-          )}
-          <button
-            type="button"
-            onClick={() => setCollapsed((current) => !current)}
-            className="
-              p-2
-              rounded-lg
-              text-gray-400
-              hover:bg-[#242424]
-              hover:text-white
-              transition
-              shrink-0
-            "
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? (
-              <PanelLeftOpen size={18} />
-            ) : (
+
+            {/* Desktop collapse toggle */}
+            <button
+              type="button"
+              onClick={() => setCollapsed((current) => !current)}
+              className="
+                hidden
+                md:flex
+                p-2
+                rounded-lg
+                text-gray-400
+                hover:bg-[#242424]
+                hover:text-white
+                transition
+                shrink-0
+              "
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? (
+                <PanelLeftOpen size={18} />
+              ) : (
+                <PanelLeftClose size={18} />
+              )}
+            </button>
+
+            {/* Mobile close */}
+            <button
+              type="button"
+              onClick={onMobileClose}
+              className="
+                md:hidden
+                p-2
+                rounded-lg
+                text-gray-400
+                hover:bg-[#242424]
+                hover:text-white
+                transition
+                shrink-0
+              "
+              title="Close sidebar"
+            >
               <PanelLeftClose size={18} />
-            )}
+            </button>
+          </div>
+
+          {/* Compose - borderless, matches Claude's plain "New chat" row */}
+
+          <button
+            type="button"
+            onClick={handleCreateChat}
+            disabled={creatingChat}
+            title="New chat"
+            className={`
+              w-full
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              px-3
+              py-2.5
+              text-gray-200
+              hover:bg-[#242424]
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+              transition
+              text-sm
+
+              ${collapsed ? "md:justify-center md:px-0" : ""}
+            `}
+          >
+            <SquarePen size={18} className="shrink-0" />
+
+            <span className={hideWhenCollapsed}>
+              {creatingChat ? "Creating..." : "New chat"}
+            </span>
           </button>
-        </div>
 
-        {/* Compose - borderless, matches Claude's plain "New chat" row */}
+          <button
+            type="button"
+            title="Search chats"
+            className={`
+              w-full
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              px-3
+              py-2.5
+              hover:bg-[#242424]
+              transition
+              text-sm
+              text-gray-200
 
-        <button
-          type="button"
-          onClick={handleCreateChat}
-          disabled={creatingChat}
-          title="New chat"
-          className={`
-            w-full
-            flex
-            items-center
-            rounded-xl
-            text-gray-200
-            hover:bg-[#242424]
-            disabled:opacity-50
-            disabled:cursor-not-allowed
-            transition
-            text-sm
+              ${collapsed ? "md:justify-center md:px-0" : ""}
+            `}
+          >
+            <Search size={18} className="shrink-0" />
 
-            ${collapsed ? "justify-center py-2.5" : "gap-3 px-3 py-2.5"}
-          `}
-        >
-          <SquarePen size={18} className="shrink-0" />
-
-          {!collapsed && (
-            <span>{creatingChat ? "Creating..." : "New chat"}</span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          title="Search chats"
-          className={`
-            w-full
-            flex
-            items-center
-            rounded-xl
-            hover:bg-[#242424]
-            transition
-            text-sm
-            text-gray-200
-
-            ${collapsed ? "justify-center py-2.5" : "gap-3 px-3 py-2.5"}
-          `}
-        >
-          <Search size={18} className="shrink-0" />
-
-          {!collapsed && (
-            <>
+            <span
+              className={`flex items-center gap-3 flex-1 ${hideWhenCollapsed}`}
+            >
               <span>Search chats</span>
-
               <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      <div
-        className="
-          flex-1
-          min-h-0
-          overflow-y-auto
-          overflow-x-hidden
-          px-3
-          chat-scroll
-        "
-      >
-        <div className="mt-1 space-y-1">
-          <button
-            type="button"
-            title="Projects"
-            className={`
-              w-full
-              flex
-              items-center
-              rounded-xl
-              text-sm
-              text-gray-300
-              hover:bg-[#1e1e1e]
-              hover:text-white
-              transition
-
-              ${collapsed ? "justify-center py-2.5" : "gap-3 px-3 py-2"}
-            `}
-          >
-            <FolderKanban size={17} className="shrink-0" />
-
-            {!collapsed && <span>Projects</span>}
-          </button>
-          <button
-            type="button"
-            title="Schedule"
-            className={`
-              w-full
-              flex
-              items-center
-              rounded-xl
-              text-sm
-              text-gray-300
-              hover:bg-[#1e1e1e]
-              hover:text-white
-              transition
-
-              ${collapsed ? "justify-center py-2.5" : "gap-3 px-3 py-2"}
-            `}
-          >
-            <CalendarClock size={17} className="shrink-0" />
-
-            {!collapsed && <span>Schedule</span>}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowPlugins(true)}
-            title="Plugins"
-            className={`
-              w-full
-              flex
-              items-center
-              rounded-xl
-              text-sm
-              transition
-
-              ${collapsed ? "justify-center py-2.5" : "gap-3 px-3 py-2"}
-
-              ${
-                showPlugins
-                  ? "bg-[#2a2a2a] text-white"
-                  : "text-gray-300 hover:bg-[#1e1e1e] hover:text-white"
-              }
-            `}
-          >
-            <Plug size={17} className="shrink-0" />
-
-            {!collapsed && <span>Plugins</span>}
+            </span>
           </button>
         </div>
 
-        {!collapsed && (
-          <div className="mt-3">
+        <div
+          className="
+            flex-1
+            min-h-0
+            overflow-y-auto
+            overflow-x-hidden
+            px-3
+            chat-scroll
+          "
+        >
+          <div className="mt-1 space-y-1">
+            <button
+              type="button"
+              title="Projects"
+              className={`
+                w-full
+                flex
+                items-center
+                gap-3
+                rounded-xl
+                px-3
+                py-2
+                text-sm
+                text-gray-300
+                hover:bg-[#1e1e1e]
+                hover:text-white
+                transition
+
+                ${collapsed ? "md:justify-center md:px-0" : ""}
+              `}
+            >
+              <FolderKanban size={17} className="shrink-0" />
+
+              <span className={hideWhenCollapsed}>Projects</span>
+            </button>
+            <button
+              type="button"
+              title="Schedule"
+              className={`
+                w-full
+                flex
+                items-center
+                gap-3
+                rounded-xl
+                px-3
+                py-2
+                text-sm
+                text-gray-300
+                hover:bg-[#1e1e1e]
+                hover:text-white
+                transition
+
+                ${collapsed ? "md:justify-center md:px-0" : ""}
+              `}
+            >
+              <CalendarClock size={17} className="shrink-0" />
+
+              <span className={hideWhenCollapsed}>Schedule</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPlugins(true)}
+              title="Plugins"
+              className={`
+                w-full
+                flex
+                items-center
+                gap-3
+                rounded-xl
+                px-3
+                py-2
+                text-sm
+                transition
+
+                ${collapsed ? "md:justify-center md:px-0" : ""}
+
+                ${
+                  showPlugins
+                    ? "bg-[#2a2a2a] text-white"
+                    : "text-gray-300 hover:bg-[#1e1e1e] hover:text-white"
+                }
+              `}
+            >
+              <Plug size={17} className="shrink-0" />
+
+              <span className={hideWhenCollapsed}>Plugins</span>
+            </button>
+          </div>
+
+          <div className={`mt-3 ${hideWhenCollapsed}`}>
             {pinnedConversations.length > 0 && (
               <div className="mb-4">
                 <div
@@ -581,52 +667,55 @@ export default function Sidebar() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Account row - anchors the bottom, opens Settings */}
+        {/* Account row - anchors the bottom, opens Settings */}
 
-      <div
-        className="
-          shrink-0
-          p-3
-        "
-      >
-        <button
-          type="button"
-          title="Settings"
-          onClick={() => setSettingsOpen(true)}
-          className={`
-            w-full
-            flex
-            items-center
-            rounded-xl
-            hover:bg-[#242424]
-            transition
-
-            ${collapsed ? "justify-center py-2" : "gap-2.5 px-2 py-2"}
-          `}
+        <div
+          className="
+            shrink-0
+            p-3
+          "
         >
-          <div
-            className="
-              h-7
-              w-7
-              shrink-0
-              rounded-full
-              bg-[#3a3a3a]
+          <button
+            type="button"
+            title="Settings"
+            onClick={() => setSettingsOpen(true)}
+            className={`
+              w-full
               flex
               items-center
-              justify-center
-              text-xs
-              font-medium
-              text-white
-            "
-          >
-            {userInitial}
-          </div>
+              gap-2.5
+              rounded-xl
+              px-2
+              py-2
+              hover:bg-[#242424]
+              transition
 
-          {!collapsed && (
-            <>
+              ${collapsed ? "md:justify-center md:px-0" : ""}
+            `}
+          >
+            <div
+              className="
+                h-7
+                w-7
+                shrink-0
+                rounded-full
+                bg-[#3a3a3a]
+                flex
+                items-center
+                justify-center
+                text-xs
+                font-medium
+                text-white
+              "
+            >
+              {userInitial}
+            </div>
+
+            <div
+              className={`min-w-0 flex flex-1 items-center gap-2 ${hideWhenCollapsed}`}
+            >
               <div className="min-w-0 flex flex-col items-start">
                 <span className="text-sm text-gray-200 truncate max-w-40">
                   {userName}
@@ -640,25 +729,25 @@ export default function Sidebar() {
               </div>
 
               <Settings size={15} className="ml-auto shrink-0 text-gray-500" />
-            </>
+            </div>
+          </button>
+
+          {settingsOpen && (
+            <SettingsModal onClose={() => setSettingsOpen(false)} />
           )}
-        </button>
+        </div>
 
-        {settingsOpen && (
-          <SettingsModal onClose={() => setSettingsOpen(false)} />
+        {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
+
+        {chatPendingDelete && (
+          <DeleteConversationModal
+            title={chatPendingDelete.title}
+            isDeleting={deletingChatId === chatPendingDelete.id}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setChatPendingDelete(null)}
+          />
         )}
-      </div>
-
-      {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
-
-      {chatPendingDelete && (
-        <DeleteConversationModal
-          title={chatPendingDelete.title}
-          isDeleting={deletingChatId === chatPendingDelete.id}
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setChatPendingDelete(null)}
-        />
-      )}
-    </aside>
+      </aside>
+    </>
   );
 }
