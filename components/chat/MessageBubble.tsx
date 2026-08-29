@@ -92,28 +92,30 @@ export default function MessageBubble({
       transition={{
         duration: 0.2,
       }}
-      className="w-full mb-6"
+      className="w-full mb-4 sm:mb-6"
     >
       {/* Common conversation column */}
-      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
+      <div className="mx-auto w-full max-w-4xl px-3 sm:px-6">
         {isUser ? (
           /* =========================
              USER MESSAGE
           ========================= */
           <div className="flex justify-end">
-            <div className="group flex max-w-[80%] flex-col items-end">
+            <div className="group flex max-w-[88%] sm:max-w-[75%] flex-col items-end">
               {/* User bubble */}
               <div
                 className="
                   rounded-3xl
                   bg-[#2f2f2f]
-                  px-4
-                  py-2.5
+                  px-3.5
+                  py-2
+                  sm:px-4
+                  sm:py-2.5
                   text-[#ECECEC]
                   shadow-sm
                 "
               >
-                <p className="whitespace-pre-wrap wrap-break-word leading-7">
+                <p className="whitespace-pre-wrap wrap-break-word text-sm leading-6 sm:text-base sm:leading-7">
                   {message.content}
                 </p>
               </div>
@@ -123,6 +125,7 @@ export default function MessageBubble({
                 className="
                   mt-1
                   flex
+                  flex-wrap
                   items-center
                   gap-2
                   opacity-0
@@ -170,14 +173,14 @@ export default function MessageBubble({
           /* =========================
              ASSISTANT MESSAGE
           ========================= */
-          <div className="flex w-full items-start gap-3">
+          <div className="flex w-full items-start gap-2.5 sm:gap-3">
             {/* AI Avatar */}
             <div className="shrink-0">
               <Avatar role={message.role} />
             </div>
 
             {/* AI Response */}
-            <div className="min-w-0 flex-1 pt-1 text-[#ECECEC]">
+            <div className="min-w-0 flex-1 pt-1 text-[#ECECEC] wrap-break-word text-sm sm:text-base">
               <ChatMarkdown content={message.content} />
 
               {message.content.trim() && (

@@ -6,6 +6,7 @@ import ChatArea from "./ChatArea";
 import ChatInput from "./ChatInput";
 
 import { useEffect, useState } from "react";
+import { Menu } from "lucide-react";
 import { Message } from "@/types/chat";
 import { streamMessage } from "@/services/chat";
 import { useChatStore } from "@/store/chatStore";
@@ -43,6 +44,7 @@ export default function ChatBox() {
   const [slowResponse, setSlowResponse] = useState(false);
   const [voiceMode, setVoiceMode] = useState(false);
   const [userName, setUserName] = useState("User");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   // TEMP MESSAGE ID
   function createTempMessageId(): number {
     return -Date.now() - Math.floor(Math.random() * 1000);
@@ -517,10 +519,41 @@ You can now ask questions about this PDF.
 
   return (
     <div className="flex h-screen bg-[#212121] text-white">
-      <Sidebar />
+      <Sidebar
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
+      />
 
       <main className="flex min-w-0 flex-1 flex-col">
-        <Header />
+        <div className="flex items-center">
+          {/* Mobile-only menu trigger - opens the Sidebar drawer.
+              Sits beside Header rather than floating over it, so
+              Header's own internal layout (justify-between) is
+              undisturbed; it just gets slightly less width on
+              mobile, which is fine at this size. */}
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(true)}
+            title="Open menu"
+            className="
+              md:hidden
+              shrink-0
+              m-2
+              p-2
+              rounded-lg
+              text-gray-300
+              hover:bg-[#2a2a2a]
+              hover:text-white
+              transition
+            "
+          >
+            <Menu size={20} />
+          </button>
+
+          <div className="flex-1 min-w-0">
+            <Header />
+          </div>
+        </div>
 
         {hasMessages ? (
           <>
@@ -540,8 +573,8 @@ You can now ask questions about this PDF.
           </>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center px-4">
-            <div className="w-full max-w-3xl -mt-16">
-              <h1 className="text-3xl font-semibold text-center mb-8">
+            <div className="w-full max-w-3xl -mt-10 sm:-mt-16">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8 px-2">
                 {getGreeting()}, {userName}. What do you want to do?
               </h1>
 

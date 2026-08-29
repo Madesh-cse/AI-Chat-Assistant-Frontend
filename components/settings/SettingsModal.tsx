@@ -30,34 +30,58 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div
+      className="
+        fixed
+        inset-0
+        z-100
+        flex
+        items-center
+        justify-center
+        bg-black/60
+        backdrop-blur-sm
+        sm:p-4
+      "
+    >
       <div
         className="
           flex
-          h-150
-          w-225
+          flex-col
+          lg:flex-row
+          h-full
+          w-full
+          lg:h-[min(37.5rem,85vh)]
+          lg:w-[min(56.25rem,90vw)]
           overflow-hidden
-          rounded-2xl
-          border
+          lg:rounded-2xl
+          border-0
+          lg:border
           border-white/10
           bg-[#202123]
           text-white
           shadow-2xl
         "
       >
+        {/* NAV PANEL - sidebar on desktop, horizontal pill bar on mobile/tablet */}
+
         <div
           className="
-            w-60
+            w-full
+            lg:w-60
             shrink-0
-            border-r
+            border-b
+            lg:border-b-0
+            lg:border-r
             border-white/10
             bg-[#171717]
-            p-4
+            p-3
+            lg:p-4
           "
         >
-          {/* HEADER */}
+          {/* HEADER - desktop only, mobile relies on the content
+              panel's own sticky header (title + close) below */}
 
-          <div className="mb-6 flex items-center justify-between px-2">
+          <div className="mb-6 hidden lg:flex items-center justify-between px-2">
             <h2 className="text-lg font-semibold">Settings</h2>
 
             <button
@@ -77,16 +101,31 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </button>
           </div>
 
-          {/* NAVIGATION */}
+          {/* NAVIGATION - horizontal scroll row on mobile/tablet,
+              vertical stack on desktop */}
 
-          <div className="space-y-1">
+          <div
+            className="
+              flex
+              lg:block
+              gap-2
+              lg:space-y-1
+              overflow-x-auto
+              lg:overflow-visible
+              scrollbar-none
+              [-ms-overflow-style:none]
+              [&::-webkit-scrollbar]:hidden
+            "
+          >
             {sections.map((section) => (
               <button
                 type="button"
                 key={section}
                 onClick={() => setActiveSection(section)}
                 className={`
-                  w-full
+                  shrink-0
+                  lg:w-full
+                  whitespace-nowrap
                   rounded-lg
                   px-3
                   py-2.5
@@ -107,7 +146,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {/* HEADER */}
 
           <div
@@ -121,11 +160,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               border-b
               border-white/10
               bg-[#202123]
-              px-8
-              py-5
+              px-4
+              sm:px-8
+              py-4
+              sm:py-5
             "
           >
-            <h3 className="text-xl font-semibold">{activeSection}</h3>
+            <h3 className="text-lg sm:text-xl font-semibold">
+              {activeSection}
+            </h3>
 
             <button
               type="button"
@@ -146,7 +189,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
           {/* CONTENT */}
 
-          <div className="p-8">
+          <div className="p-4 sm:p-8">
             {activeSection === "General" && (
               <div className="space-y-6">
                 <SettingRow
@@ -199,7 +242,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     Choose how AI Chat Bot looks.
                   </p>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     <ThemeButton
                       icon={<Sun size={20} />}
                       label="Light"
@@ -232,7 +275,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     Choose the primary color for the interface.
                   </p>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     {(["blue", "purple", "green", "orange"] as Accent[]).map(
                       (color) => (
                         <button
@@ -418,14 +461,18 @@ function SettingRow({
     <div
       className="
         flex
-        items-center
+        flex-col
+        sm:flex-row
+        sm:items-center
         justify-between
+        gap-3
+        sm:gap-0
         border-b
         border-white/10
         pb-5
       "
     >
-      <div className="pr-8">
+      <div className="sm:pr-8">
         <h4 className="text-sm font-medium">{title}</h4>
 
         <p className="mt-1 text-sm text-gray-400">{description}</p>
@@ -449,6 +496,7 @@ function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
         relative
         h-6
         w-11
+        shrink-0
         rounded-full
         transition
         ${enabled ? "bg-blue-500" : "bg-gray-600"}
@@ -493,7 +541,8 @@ function ThemeButton({
         gap-2
         rounded-xl
         border
-        p-4
+        p-3
+        sm:p-4
         transition
         ${
           active
