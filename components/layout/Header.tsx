@@ -1,47 +1,58 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, Share, MoreVertical, LogOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Share, MoreVertical, LogOut, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useChatStore } from "@/store/chatStore";
 
+const CURRENT_MODEL = "qwen2.5:3b";
+
 export default function Header() {
   const router = useRouter();
 
-  const { conversations, activeConversation } = useChatStore();
+  useChatStore(); // kept for parity - conversation state no longer read here
 
   const [moreOpen, setMoreOpen] = useState(false);
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
 
-  // Find currently active conversation
-  const activeChat = conversations.find(
-    (chat) => chat.id === activeConversation,
-  );
+  const modelMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  const chatTitle = activeChat?.title?.trim() || "New Chat";
+  // Close either dropdown on an outside click.
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
 
-  // =========================================
-  // LOGOUT
-  // =========================================
+      if (
+        modelMenuRef.current &&
+        !modelMenuRef.current.contains(target)
+      ) {
+        setModelMenuOpen(false);
+      }
+
+      if (moreMenuRef.current && !moreMenuRef.current.contains(target)) {
+        setMoreOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   function handleLogout() {
-    // Remove authentication token
     localStorage.removeItem("access_token");
-
-    // If you use another token name, remove it here too
     localStorage.removeItem("token");
-
-    // Close menu
     setMoreOpen(false);
-
-    // Redirect to login
     router.push("/login");
   }
 
   return (
     <header
       className="
-        relative
         h-14
         border-b
         border-[#2f2f2f]
@@ -50,83 +61,95 @@ export default function Header() {
         flex
         items-center
         justify-between
-        px-6
+        px-4
       "
     >
       {/* =========================================
-          LEFT - AI ASSISTANT
+          LEFT - NAME / MODEL DROPDOWN
       ========================================= */}
 
-      <div className="flex items-center gap-3">
-        {/* AI Logo */}
-
-        <div
+      <div className="relative" ref={modelMenuRef}>
+        <button
+          type="button"
+          onClick={() => setModelMenuOpen((current) => !current)}
           className="
-            h-8
-            w-8
-            rounded-full
-            bg-[#303030]
-            border
-            border-[#444]
             flex
             items-center
-            justify-center
+            gap-1.5
+            rounded-lg
+            px-2
+            py-1.5
+            font-medium
             text-sm
-            font-semibold
+            text-gray-200
+            hover:bg-[#2a2a2a]
+            transition
           "
         >
-          C
-        </div>
+          CacheAI
+          <ChevronDown
+            size={15}
+            className={`transition-transform ${
+              modelMenuOpen ? "rotate-180" : ""
+            }`}
+          />
+        </button>
 
-        {/* Assistant Name */}
-
-        <div>
-          <button
-            type="button"
+        {modelMenuOpen && (
+          <div
             className="
-              flex
-              items-center
-              gap-1
-              font-semibold
-              text-sm
-              hover:text-gray-300
-              transition
+              absolute
+              left-0
+              top-11
+              w-56
+              rounded-xl
+              border
+              border-[#3f3f3f]
+              bg-[#252525]
+              shadow-2xl
+              overflow-hidden
+              z-50
             "
           >
-            CacheAI
-            <ChevronDown size={15} />
-          </button>
+            <div
+              className="
+                px-4
+                py-2.5
+                text-xs
+                font-medium
+                text-gray-500
+              "
+            >
+              Model
+            </div>
 
-          <p
-            className="
-              text-xs
-              text-gray-400
-            "
-          >
-            qwen2.5:3b • Local AI
-          </p>
-        </div>
-      </div>
+            <button
+              type="button"
+              onClick={() => setModelMenuOpen(false)}
+              className="
+                w-full
+                flex
+                items-center
+                justify-between
+                gap-3
+                px-4
+                py-2.5
+                text-left
+                text-sm
+                text-white
+                hover:bg-[#303030]
+                transition
+              "
+            >
+              <div className="flex flex-col items-start">
+                <span>{CURRENT_MODEL}</span>
+                <span className="text-xs text-gray-500">Local AI</span>
+              </div>
 
-      {/* =========================================
-          CENTER - CONVERSATION TITLE
-      ========================================= */}
-
-      <div
-        className="
-          absolute
-          left-1/2
-          -translate-x-1/2
-          max-w-[40%]
-          px-4
-          text-sm
-          font-medium
-          text-gray-300
-          truncate
-        "
-        title={chatTitle}
-      >
-        {chatTitle}
+              <Check size={15} className="text-[#D97757]" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* =========================================
@@ -153,7 +176,7 @@ export default function Header() {
 
         {/* More */}
 
-        <div className="relative">
+        <div className="relative" ref={moreMenuRef}>
           <button
             type="button"
             title="More"

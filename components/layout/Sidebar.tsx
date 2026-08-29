@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Plus,
+  SquarePen,
   MessageSquare,
   Search,
   Settings,
@@ -25,6 +25,66 @@ import DeleteConversationModal from "../Model/DeleteConversationModel";
 
 import { togglePinConversation } from "@/services/conversation";
 
+type Conversation = ReturnType<
+  typeof useChatStore.getState
+>["conversations"][number];
+
+// RECENCY GROUPING
+//
+// Mirrors Claude's own "Today / Yesterday / Previous 7 Days / Older"
+// grouping. Reads `updated_at`, falling back to `created_at` - rename
+// this to match whatever field your actual Conversation type uses if
+// it differs, or every chat will land in "Older".
+
+function getConversationTimestamp(chat: Conversation): number {
+  const raw =
+    (chat as unknown as { updated_at?: string; created_at?: string })
+      .updated_at ??
+    (chat as unknown as { updated_at?: string; created_at?: string })
+      .created_at;
+
+  const parsed = raw ? new Date(raw).getTime() : NaN;
+
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function groupByRecency(chats: Conversation[]) {
+  const now = new Date();
+
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  ).getTime();
+
+  const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+
+  const sevenDaysAgo = startOfToday - 7 * 24 * 60 * 60 * 1000;
+
+  const groups: { label: string; chats: Conversation[] }[] = [
+    { label: "Today", chats: [] },
+    { label: "Yesterday", chats: [] },
+    { label: "Previous 7 Days", chats: [] },
+    { label: "Older", chats: [] },
+  ];
+
+  for (const chat of chats) {
+    const timestamp = getConversationTimestamp(chat);
+
+    if (timestamp >= startOfToday) {
+      groups[0].chats.push(chat);
+    } else if (timestamp >= startOfYesterday) {
+      groups[1].chats.push(chat);
+    } else if (timestamp >= sevenDaysAgo) {
+      groups[2].chats.push(chat);
+    } else {
+      groups[3].chats.push(chat);
+    }
+  }
+
+  return groups.filter((group) => group.chats.length > 0);
+}
+
 export default function Sidebar() {
   const {
     conversations,
@@ -45,10 +105,32 @@ export default function Sidebar() {
   const [showPlugins, setShowPlugins] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [userName, setUserName] = useState("User");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser) return;
+
+    try {
+      const user = JSON.parse(storedUser);
+
+      if (user?.name) {
+        setUserName(user.name);
+      }
+
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
+    } catch (error) {
+      console.error("Failed to parse user data:", error);
+    }
+  }, []);
 
   async function handleCreateChat() {
     if (creatingChat) {
@@ -112,6 +194,9 @@ export default function Sidebar() {
 
   const pinnedConversations = conversations.filter((chat) => chat.is_pinned);
   const normalConversations = conversations.filter((chat) => !chat.is_pinned);
+  const recencyGroups = groupByRecency(normalConversations);
+
+  const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
   function renderConversation(chat: (typeof conversations)[number]) {
     const isActive = activeConversation === chat.id;
@@ -126,10 +211,10 @@ export default function Sidebar() {
           w-full
           flex
           items-center
-          rounded-lg
+          rounded-xl
           transition
 
-          ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#242424]"}
+          ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#1e1e1e]"}
         `}
       >
         <button
@@ -139,7 +224,6 @@ export default function Sidebar() {
           className={`
             flex
             items-center
-            gap-3
             min-w-0
             flex-1
             text-left
@@ -156,8 +240,6 @@ export default function Sidebar() {
             }
           `}
         >
-          <MessageSquare size={16} className="shrink-0" />
-
           <span className="truncate">{chat.title || "New chat"}</span>
         </button>
         <button
@@ -221,8 +303,6 @@ export default function Sidebar() {
         flex-col
         bg-[#171717]
         text-[#ececec]
-        border-r
-        border-[#2f2f2f]
         relative
         shrink-0
         transition-[width]
@@ -238,8 +318,6 @@ export default function Sidebar() {
           shrink-0
           p-3
           bg-[#171717]
-          border-b
-          border-[#2f2f2f]
           z-20
         "
       >
@@ -247,30 +325,31 @@ export default function Sidebar() {
           className={`
             flex
             items-center
-            mb-3
+            mb-2
 
             ${collapsed ? "justify-center" : "justify-between"}
           `}
         >
           {!collapsed && (
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 px-1">
               <div
                 className="
-                  h-8
-                  w-8
+                  h-7
+                  w-7
                   shrink-0
                   rounded-lg
-                  bg-[#303030]
+                  bg-[#D97757]
                   flex
                   items-center
                   justify-center
                   font-semibold
                   text-sm
+                  text-white
                 "
               >
                 C
               </div>
-              <span className="font-semibold text-sm truncate">CacheAI</span>
+              <span className="font-medium text-sm truncate">CacheAI</span>
             </div>
           )}
           <button
@@ -280,7 +359,7 @@ export default function Sidebar() {
               p-2
               rounded-lg
               text-gray-400
-              hover:bg-[#2a2a2a]
+              hover:bg-[#242424]
               hover:text-white
               transition
               shrink-0
@@ -294,6 +373,9 @@ export default function Sidebar() {
             )}
           </button>
         </div>
+
+        {/* Compose - borderless, matches Claude's plain "New chat" row */}
+
         <button
           type="button"
           onClick={handleCreateChat}
@@ -303,22 +385,48 @@ export default function Sidebar() {
             w-full
             flex
             items-center
-            rounded-lg
-            border
-            border-[#444]
-            hover:bg-[#2a2a2a]
+            rounded-xl
+            text-gray-200
+            hover:bg-[#242424]
             disabled:opacity-50
             disabled:cursor-not-allowed
             transition
             text-sm
 
-            ${collapsed ? "justify-center py-3" : "gap-3 px-3 py-3"}
+            ${collapsed ? "justify-center py-2.5" : "gap-3 px-3 py-2.5"}
           `}
         >
-          <Plus size={18} className="shrink-0" />
+          <SquarePen size={18} className="shrink-0" />
 
           {!collapsed && (
             <span>{creatingChat ? "Creating..." : "New chat"}</span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          title="Search chats"
+          className={`
+            w-full
+            flex
+            items-center
+            rounded-xl
+            hover:bg-[#242424]
+            transition
+            text-sm
+            text-gray-200
+
+            ${collapsed ? "justify-center py-2.5" : "gap-3 px-3 py-2.5"}
+          `}
+        >
+          <Search size={18} className="shrink-0" />
+
+          {!collapsed && (
+            <>
+              <span>Search chats</span>
+
+              <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
+            </>
           )}
         </button>
       </div>
@@ -333,7 +441,7 @@ export default function Sidebar() {
           chat-scroll
         "
       >
-        <div className="mt-3 space-y-1">
+        <div className="mt-1 space-y-1">
           <button
             type="button"
             title="Projects"
@@ -341,10 +449,10 @@ export default function Sidebar() {
               w-full
               flex
               items-center
-              rounded-lg
+              rounded-xl
               text-sm
               text-gray-300
-              hover:bg-[#242424]
+              hover:bg-[#1e1e1e]
               hover:text-white
               transition
 
@@ -362,10 +470,10 @@ export default function Sidebar() {
               w-full
               flex
               items-center
-              rounded-lg
+              rounded-xl
               text-sm
               text-gray-300
-              hover:bg-[#242424]
+              hover:bg-[#1e1e1e]
               hover:text-white
               transition
 
@@ -384,7 +492,7 @@ export default function Sidebar() {
               w-full
               flex
               items-center
-              rounded-lg
+              rounded-xl
               text-sm
               transition
 
@@ -393,7 +501,7 @@ export default function Sidebar() {
               ${
                 showPlugins
                   ? "bg-[#2a2a2a] text-white"
-                  : "text-gray-300 hover:bg-[#242424] hover:text-white"
+                  : "text-gray-300 hover:bg-[#1e1e1e] hover:text-white"
               }
             `}
           >
@@ -403,36 +511,8 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <button
-          type="button"
-          title="Search chats"
-          className={`
-            w-full
-            flex
-            items-center
-            mt-2
-            rounded-lg
-            hover:bg-[#2a2a2a]
-            transition
-            text-sm
-            text-gray-300
-
-            ${collapsed ? "justify-center py-3" : "gap-3 px-3 py-3"}
-          `}
-        >
-          <Search size={18} className="shrink-0" />
-
-          {!collapsed && (
-            <>
-              <span>Search chats</span>
-
-              <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
-            </>
-          )}
-        </button>
-
         {!collapsed && (
-          <div className="mt-2">
+          <div className="mt-3">
             {pinnedConversations.length > 0 && (
               <div className="mb-4">
                 <div
@@ -441,99 +521,134 @@ export default function Sidebar() {
                     items-center
                     gap-2
                     px-3
-                    py-2
+                    py-1.5
                     text-xs
                     font-medium
                     text-gray-500
                   "
                 >
-                  <Pin size={13} className="fill-current" />
+                  <Pin size={12} className="fill-current" />
                   <span>Pinned</span>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {pinnedConversations.map(renderConversation)}
                 </div>
               </div>
             )}
 
-            <div>
-              <p
+            {loadingConversations && (
+              <div
                 className="
                   px-3
-                  py-2
-                  text-xs
-                  font-medium
+                  py-3
+                  text-sm
                   text-gray-500
                 "
               >
-                Chats
-              </p>
-              {loadingConversations && (
-                <div
-                  className="
-                    px-3
-                    py-3
-                    text-sm
-                    text-gray-500
-                  "
-                >
-                  Loading conversations...
-                </div>
-              )}
-              {!loadingConversations && normalConversations.length === 0 && (
-                <div
-                  className="
-                    px-3
-                    py-3
-                    text-sm
-                    text-gray-500
-                  "
-                >
-                  No conversations yet.
-                </div>
-              )}
-              <div className="space-y-1">
-                {normalConversations.map(renderConversation)}
+                Loading conversations...
               </div>
-            </div>
+            )}
+
+            {!loadingConversations && normalConversations.length === 0 && (
+              <div
+                className="
+                  px-3
+                  py-3
+                  text-sm
+                  text-gray-500
+                "
+              >
+                No conversations yet.
+              </div>
+            )}
+
+            {recencyGroups.map((group) => (
+              <div key={group.label} className="mb-4">
+                <p
+                  className="
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-medium
+                    text-gray-500
+                  "
+                >
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.chats.map(renderConversation)}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
+
+      {/* Account row - anchors the bottom, opens Settings */}
 
       <div
         className="
           shrink-0
           p-3
-          border-t
-          border-[#2f2f2f]
-          bg-[#171717]
         "
       >
         <button
           type="button"
           title="Settings"
+          onClick={() => setSettingsOpen(true)}
           className={`
             w-full
             flex
             items-center
-            rounded-lg
+            rounded-xl
             hover:bg-[#242424]
             transition
-            text-xs
-            text-gray-400
 
             ${collapsed ? "justify-center py-2" : "gap-2.5 px-2 py-2"}
           `}
-          onClick={() => setSettingsOpen(true)}
         >
-          <Settings size={15} className="shrink-0" />
+          <div
+            className="
+              h-7
+              w-7
+              shrink-0
+              rounded-full
+              bg-[#3a3a3a]
+              flex
+              items-center
+              justify-center
+              text-xs
+              font-medium
+              text-white
+            "
+          >
+            {userInitial}
+          </div>
 
-          {!collapsed && <span>Settings</span>}
+          {!collapsed && (
+            <>
+              <div className="min-w-0 flex flex-col items-start">
+                <span className="text-sm text-gray-200 truncate max-w-40">
+                  {userName}
+                </span>
+
+                {userEmail && (
+                  <span className="text-xs text-gray-500 truncate max-w-40">
+                    {userEmail}
+                  </span>
+                )}
+              </div>
+
+              <Settings size={15} className="ml-auto shrink-0 text-gray-500" />
+            </>
+          )}
         </button>
+
         {settingsOpen && (
           <SettingsModal onClose={() => setSettingsOpen(false)} />
         )}
       </div>
+
       {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
 
       {chatPendingDelete && (
