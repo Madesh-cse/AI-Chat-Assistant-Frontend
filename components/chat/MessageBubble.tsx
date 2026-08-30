@@ -106,12 +106,12 @@ export default function MessageBubble({
               <div
                 className="
                   rounded-3xl
-                  bg-[#2f2f2f]
+                  bg-(--foreground)/8
                   px-3.5
                   py-2
                   sm:px-4
                   sm:py-2.5
-                  text-[#ECECEC]
+                  text-(--foreground)
                   shadow-sm
                 "
               >
@@ -136,7 +136,7 @@ export default function MessageBubble({
               >
                 {message.created_at && (
                   <span
-                    className="text-xs text-gray-500"
+                    className="text-xs text-(--muted)"
                     title={new Date(message.created_at).toLocaleString()}
                   >
                     {getRelativeTime(message.created_at)}
@@ -153,10 +153,10 @@ export default function MessageBubble({
                     gap-1
                     rounded-md
                     p-1.5
-                    text-gray-500
+                    text-(--muted)
                     transition
-                    hover:bg-[#2a2a2a]
-                    hover:text-gray-300
+                    hover:bg-(--foreground)/10
+                    hover:text-(--foreground)
                     focus:outline-none
                   "
                 >
@@ -170,9 +170,6 @@ export default function MessageBubble({
             </div>
           </div>
         ) : (
-          /* =========================
-             ASSISTANT MESSAGE
-          ========================= */
           <div className="flex w-full items-start gap-2.5 sm:gap-3">
             {/* AI Avatar */}
             <div className="shrink-0">
@@ -180,7 +177,7 @@ export default function MessageBubble({
             </div>
 
             {/* AI Response */}
-            <div className="min-w-0 flex-1 pt-1 text-[#ECECEC] wrap-break-word text-sm sm:text-base">
+            <div className="min-w-0 flex-1 pt-1 text-(--foreground) wrap-break-word text-sm sm:text-base">
               <ChatMarkdown content={message.content} />
 
               {message.content.trim() && (

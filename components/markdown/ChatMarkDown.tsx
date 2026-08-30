@@ -75,14 +75,14 @@ export default function ChatMarkdown({ content }: Props) {
             <blockquote
               className="
                 border-l-4
-                border-green-500
-                bg-[#2d2d2d]
+                border-[#D97757]
+                bg-(--foreground)/8
                 rounded-r-xl
                 px-5
                 py-4
                 my-6
                 italic
-                text-gray-300
+                text-(--muted)
               "
             >
               {children}
@@ -93,7 +93,7 @@ export default function ChatMarkdown({ content }: Props) {
             <hr
               className="
                 my-8
-                border-[#3a3a3a]
+                border-(--border)
               "
             />
           ),
@@ -145,8 +145,8 @@ export default function ChatMarkdown({ content }: Props) {
               return (
                 <code
                   className="
-                    bg-[#2f2f2f]
-                    text-[#e8e8e6]
+                    bg-(--foreground)/10
+                    text-(--foreground)
                     rounded-md
                     px-1.5
                     py-0.5
@@ -172,11 +172,13 @@ export default function ChatMarkdown({ content }: Props) {
           ),
 
           strong: ({ children }) => (
-            <strong className="font-semibold text-white">{children}</strong>
+            <strong className="font-semibold text-(--foreground)">
+              {children}
+            </strong>
           ),
 
           em: ({ children }) => (
-            <em className="italic text-gray-300">{children}</em>
+            <em className="italic text-(--muted)">{children}</em>
           ),
         }}
       >
