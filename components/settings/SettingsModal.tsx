@@ -4,20 +4,29 @@ import { useState } from "react";
 import { X, Sun, Moon, Monitor, Check } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import ConnectedApps from "./ConnectedApps";
+import { useSettings, Language } from "../../context/SettingsContext";
 
 interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Theme = "light" | "dark" | "system";
 type Accent = "blue" | "purple" | "green" | "orange";
+
+type Personality =
+  | "Helpful & concise"
+  | "Professional"
+  | "Friendly"
+  | "Detailed"
+  | "Technical";
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [activeSection, setActiveSection] = useState("General");
-
   const [accent, setAccent] = useState<Accent>("blue");
+  const [personality, setPersonality] =
+    useState<Personality>("Helpful & concise");
 
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = useSettings();
 
   const sections = [
     "General",
@@ -56,14 +65,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           lg:rounded-2xl
           border-0
           lg:border
-          border-white/10
-          bg-[#202123]
-          text-white
+          border-(--border)
+          bg-(--background)
+          text-(--foreground)
           shadow-2xl
         "
       >
-        {/* NAV PANEL - sidebar on desktop, horizontal pill bar on mobile/tablet */}
-
         <div
           className="
             w-full
@@ -72,16 +79,22 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             border-b
             lg:border-b-0
             lg:border-r
-            border-white/10
-            bg-[#171717]
+            border-(--border)
+            bg-(--sidebar)
             p-3
             lg:p-4
           "
         >
-          {/* HEADER - desktop only, mobile relies on the content
-              panel's own sticky header (title + close) below */}
-
-          <div className="mb-6 hidden lg:flex items-center justify-between px-2">
+          <div
+            className="
+              mb-6
+              hidden
+              lg:flex
+              items-center
+              justify-between
+              px-2
+            "
+          >
             <h2 className="text-lg font-semibold">Settings</h2>
 
             <button
@@ -90,20 +103,16 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               className="
                 rounded-lg
                 p-2
-                text-gray-400
+                text-(--muted)
                 transition
-                hover:bg-white/10
-                hover:text-white
+                hover:bg-(--hover)
+                hover:text-(--foreground)
               "
               aria-label="Close settings"
             >
               <X size={18} />
             </button>
           </div>
-
-          {/* NAVIGATION - horizontal scroll row on mobile/tablet,
-              vertical stack on desktop */}
-
           <div
             className="
               flex
@@ -135,8 +144,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
                   ${
                     activeSection === section
-                      ? "bg-white/10 text-white"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                      ? "bg-(--active) text-(--foreground)"
+                      : "text-(--muted) hover:bg-(--hover) hover:text-(--foreground)"
                   }
                 `}
               >
@@ -145,10 +154,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             ))}
           </div>
         </div>
-
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {/* HEADER */}
-
           <div
             className="
               sticky
@@ -158,8 +164,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               items-center
               justify-between
               border-b
-              border-white/10
-              bg-[#202123]
+              border-(--border)
+              bg-(--background)
               px-4
               sm:px-8
               py-4
@@ -176,18 +182,16 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               className="
                 rounded-lg
                 p-2
-                text-gray-400
+                text-(--muted)
                 transition
-                hover:bg-white/10
-                hover:text-white
+                hover:bg-(--hover)
+                hover:text-(--foreground)
               "
               aria-label="Close settings"
             >
               <X size={20} />
             </button>
           </div>
-
-          {/* CONTENT */}
 
           <div className="p-4 sm:p-8">
             {activeSection === "General" && (
@@ -197,21 +201,32 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   description="Choose the language used by the assistant."
                 >
                   <select
-                    defaultValue="English"
+                    value={language}
+                    onChange={(event) =>
+                      setLanguage(event.target.value as Language)
+                    }
                     className="
-                      rounded-lg
-                      border
-                      border-white/10
-                      bg-[#2a2b32]
-                      px-3
-                      py-2
-                      text-sm
-                      outline-none
-                    "
+          min-w-32
+          cursor-pointer
+          rounded-lg
+          border
+          border-(--border)
+          bg-(--input-bg)
+          px-3
+          py-2
+          text-sm
+          text-(--foreground)
+          outline-none
+          transition
+          hover:border-(--border-hover)
+          focus:border-blue-500
+          focus:ring-2
+          focus:ring-blue-500/20
+        "
                   >
-                    <option>English</option>
-                    <option>Tamil</option>
-                    <option>Hindi</option>
+                    <option value="en">English</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
                   </select>
                 </SettingRow>
 
@@ -230,15 +245,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </SettingRow>
               </div>
             )}
-
             {activeSection === "Appearance" && (
               <div className="space-y-8">
-                {/* THEME */}
+                {/* Theme */}
 
                 <div>
                   <h4 className="mb-2 font-medium">Theme</h4>
 
-                  <p className="mb-4 text-sm text-gray-400">
+                  <p className="mb-4 text-sm text-(--muted)">
                     Choose how AI Chat Bot looks.
                   </p>
 
@@ -266,12 +280,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   </div>
                 </div>
 
-                {/* ACCENT COLOR */}
+                {/* Accent Color */}
 
                 <div>
                   <h4 className="mb-2 font-medium">Accent color</h4>
 
-                  <p className="mb-4 text-sm text-gray-400">
+                  <p className="mb-4 text-sm text-(--muted)">
                     Choose the primary color for the interface.
                   </p>
 
@@ -290,11 +304,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                           rounded-full
                           border-2
                           transition
+                          hover:scale-105
+
                           ${
                             accent === color
-                              ? "border-white"
+                              ? "border-(--foreground)"
                               : "border-transparent"
                           }
+
                           ${
                             color === "blue"
                               ? "bg-blue-500"
@@ -326,7 +343,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             )}
 
             {activeSection === "Connected Apps" && <ConnectedApps />}
-
             {activeSection === "Notifications" && (
               <div className="space-y-6">
                 <SettingRow
@@ -346,39 +362,123 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             )}
 
             {activeSection === "Personalization" && (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <h4 className="font-medium">Assistant personality</h4>
+                  <h4 className="font-medium text-(--foreground)">
+                    Assistant personality
+                  </h4>
 
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-(--muted)">
                     Choose how the assistant communicates with you.
                   </p>
 
-                  <select
-                    defaultValue="Helpful & concise"
-                    className="
-                      mt-4
-                      w-full
-                      rounded-lg
-                      border
-                      border-white/10
-                      bg-[#2a2b32]
-                      px-3
-                      py-3
-                      text-sm
-                      outline-none
-                    "
-                  >
-                    <option>Helpful & concise</option>
+                  <div className="mt-5 space-y-2">
+                    {[
+                      {
+                        value: "Helpful & concise" as Personality,
+                        title: "Helpful & concise",
+                        description:
+                          "Clear, direct answers without unnecessary detail.",
+                      },
+                      {
+                        value: "Professional" as Personality,
+                        title: "Professional",
+                        description:
+                          "Polished, structured, and suitable for work and business.",
+                      },
+                      {
+                        value: "Friendly" as Personality,
+                        title: "Friendly",
+                        description: "Warm, conversational, and approachable.",
+                      },
+                      {
+                        value: "Detailed" as Personality,
+                        title: "Detailed",
+                        description:
+                          "Thorough explanations with useful context and examples.",
+                      },
+                      {
+                        value: "Technical" as Personality,
+                        title: "Technical",
+                        description:
+                          "Precise, developer-focused answers with technical depth.",
+                      },
+                    ].map((option) => {
+                      const selected = personality === option.value;
 
-                    <option>Professional</option>
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setPersonality(option.value)}
+                          className={`
+                            group
+                            flex
+                            w-full
+                            items-center
+                            justify-between
+                            gap-4
+                            rounded-xl
+                            border
+                            px-4
+                            py-3.5
+                            text-left
+                            transition-all
+                            duration-150
 
-                    <option>Friendly</option>
+                            ${
+                              selected
+                                ? "border-blue-500/60 bg-blue-500/10"
+                                : "border-(--border) bg-(--card) hover:bg-(--hover) hover:border-(--border-hover)"
+                            }
+                          `}
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-(--foreground)">
+                              {option.title}
+                            </p>
 
-                    <option>Detailed</option>
+                            <p className="mt-1 text-sm leading-5 text-(--muted)">
+                              {option.description}
+                            </p>
+                          </div>
 
-                    <option>Technical</option>
-                  </select>
+                          {/* Radio */}
+
+                          <div
+                            className={`
+                              flex
+                              h-5
+                              w-5
+                              shrink-0
+                              items-center
+                              justify-center
+                              rounded-full
+                              border
+                              transition
+
+                              ${
+                                selected
+                                  ? "border-blue-500"
+                                  : "border-(--border) group-hover:border-(--muted)"
+                              }
+                            `}
+                          >
+                            {selected && (
+                              <div
+                                className="
+                                  h-2.5
+                                  w-2.5
+                                  rounded-full
+                                  bg-blue-500
+                                "
+                              />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -421,19 +521,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             {activeSection === "About" && (
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-400">Application</p>
+                  <p className="text-sm text-(--muted)">Application</p>
 
                   <p className="mt-1">AI Chat Bot</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-400">Version</p>
+                  <p className="text-sm text-(--muted)">Version</p>
 
                   <p className="mt-1">1.0.0</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-400">AI Model</p>
+                  <p className="text-sm text-(--muted)">AI Model</p>
 
                   <p className="mt-1">Qwen 2.5 3B via Ollama</p>
                 </div>
@@ -445,8 +545,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     </div>
   );
 }
-
-/* SETTING ROW */
 
 function SettingRow({
   title,
@@ -468,21 +566,20 @@ function SettingRow({
         gap-3
         sm:gap-0
         border-b
-        border-white/10
+        border-(--border)
         pb-5
       "
     >
       <div className="sm:pr-8">
         <h4 className="text-sm font-medium">{title}</h4>
 
-        <p className="mt-1 text-sm text-gray-400">{description}</p>
+        <p className="mt-1 text-sm text-(--muted)">{description}</p>
       </div>
 
       {children}
     </div>
   );
 }
-/* TOGGLE */
 
 function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
   const [enabled, setEnabled] = useState(defaultChecked);
@@ -499,7 +596,7 @@ function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
         shrink-0
         rounded-full
         transition
-        ${enabled ? "bg-blue-500" : "bg-gray-600"}
+        ${enabled ? "bg-blue-500" : "bg-(--toggle-off)"}
       `}
     >
       <span
@@ -510,6 +607,7 @@ function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
           w-4
           rounded-full
           bg-white
+          shadow-sm
           transition
           ${enabled ? "left-6" : "left-1"}
         `}
@@ -518,7 +616,6 @@ function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
   );
 }
 
-/* THEME BUTTON */
 function ThemeButton({
   icon,
   label,
@@ -544,10 +641,11 @@ function ThemeButton({
         p-3
         sm:p-4
         transition
+
         ${
           active
-            ? "border-blue-500 bg-blue-500/10"
-            : "border-white/10 bg-[#2a2b32] hover:bg-white/10"
+            ? "border-blue-500 bg-blue-500/10 text-blue-500"
+            : "border-(--border) bg-(--card) text-(--foreground) hover:bg-(--hover)"
         }
       `}
     >

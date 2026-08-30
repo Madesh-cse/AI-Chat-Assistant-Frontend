@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ThemeProvider } from "../context/ThemeContext";
+import { SettingsProvider } from "../context/SettingsContext";
 
 export default function RootLayout({
   children,
@@ -10,7 +11,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          {children}
+          <SettingsProvider>
+            {children}
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

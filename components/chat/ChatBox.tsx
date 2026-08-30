@@ -448,12 +448,6 @@ You can now ask questions about this PDF.
     setSlowResponse(false);
 
     let hasReceivedResponse = false;
-
-    // Flip the slow-response flag after 10 seconds instead of
-    // overwriting the message with plain text - the TypingIndicator
-    // reads this flag and swaps its label, so the sparkle/animation
-    // stays visible the whole time instead of being replaced by a
-    // static bubble.
     const slowResponseTimer = setTimeout(() => {
       if (!hasReceivedResponse) {
         setSlowResponse(true);
@@ -526,11 +520,6 @@ You can now ask questions about this PDF.
 
       <main className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center">
-          {/* Mobile-only menu trigger - opens the Sidebar drawer.
-              Sits beside Header rather than floating over it, so
-              Header's own internal layout (justify-between) is
-              undisturbed; it just gets slightly less width on
-              mobile, which is fine at this size. */}
           <button
             type="button"
             onClick={() => setMobileSidebarOpen(true)}
