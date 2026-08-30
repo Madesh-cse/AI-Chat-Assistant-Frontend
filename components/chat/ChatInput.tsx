@@ -297,7 +297,7 @@ export default function ChatInput({
   }
 
   return (
-    <div className="bg-[#212121] pt-2">
+    <div className="bg-(--background) pt-2">
       <div className="max-w-3xl mx-auto px-3">
         {(file || pastedContent) && (
           <div className="mb-2 flex flex-wrap gap-2">
@@ -307,12 +307,12 @@ export default function ChatInput({
                   inline-flex
                   items-center
                   gap-3
-                  bg-[#2a2a2a]
+                  bg-(--foreground)/8
                   rounded-xl
                   px-3
                   py-2.5
                   border
-                  border-[#3f3f3f]
+                  border-(--border)
                   shadow-sm
                   max-w-full
                 "
@@ -340,7 +340,7 @@ export default function ChatInput({
                   <span
                     className="
                       text-sm
-                      text-white
+                      text-(--foreground)
                       font-medium
                       truncate
                       max-w-52
@@ -350,7 +350,7 @@ export default function ChatInput({
                     {file.name}
                   </span>
 
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-(--muted)">
                     PDF · {formatFileSize(file.size)}
                   </span>
                 </div>
@@ -371,9 +371,9 @@ export default function ChatInput({
                     items-center
                     justify-center
                     rounded-full
-                    text-gray-400
-                    hover:bg-[#3a3a3a]
-                    hover:text-white
+                    text-(--muted)
+                    hover:bg-(--foreground)/10
+                    hover:text-(--foreground)
                     transition
                     disabled:opacity-50
                   "
@@ -390,16 +390,16 @@ export default function ChatInput({
                   inline-flex
                   items-center
                   gap-3
-                  bg-[#2a2a2a]
+                  bg-(--foreground)/8
                   rounded-xl
                   px-3
                   py-2.5
                   border
-                  border-[#3f3f3f]
+                  border-(--border)
                   shadow-sm
                   max-w-full
                   cursor-pointer
-                  hover:border-[#555]
+                  hover:border-(--foreground)/20
                   transition
                 "
               >
@@ -423,13 +423,13 @@ export default function ChatInput({
                 {/* Label + line count */}
 
                 <div className="min-w-0 flex flex-col">
-                  <span className="text-sm text-white font-medium truncate max-w-52">
+                  <span className="text-sm text-(--foreground) font-medium truncate max-w-52">
                     {pastedContent.looksLikeCode
                       ? "Pasted code"
                       : "Pasted text"}
                   </span>
 
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-(--muted)">
                     {pastedContent.lineCount} lines ·{" "}
                     {pastedContent.text.length.toLocaleString()} chars
                   </span>
@@ -455,9 +455,9 @@ export default function ChatInput({
                     items-center
                     justify-center
                     rounded-full
-                    text-gray-400
-                    hover:bg-[#3a3a3a]
-                    hover:text-white
+                    text-(--muted)
+                    hover:bg-(--foreground)/10
+                    hover:text-(--foreground)
                     transition
                     disabled:opacity-50
                   "
@@ -491,10 +491,10 @@ export default function ChatInput({
                 max-h-[70vh]
                 flex
                 flex-col
-                bg-[#252525]
+                bg-(--card)
                 rounded-xl
                 border
-                border-[#3f3f3f]
+                border-(--border)
                 shadow-2xl
                 overflow-hidden
               "
@@ -507,10 +507,10 @@ export default function ChatInput({
                   px-4
                   py-3
                   border-b
-                  border-[#3a3a3a]
+                  border-(--border)
                 "
               >
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-(--foreground)">
                   {pastedContent.looksLikeCode ? "Pasted code" : "Pasted text"}
                 </p>
 
@@ -524,9 +524,9 @@ export default function ChatInput({
                     items-center
                     justify-center
                     rounded-full
-                    text-gray-400
-                    hover:bg-[#3a3a3a]
-                    hover:text-white
+                    text-(--muted)
+                    hover:bg-(--foreground)/10
+                    hover:text-(--foreground)
                     transition
                   "
                 >
@@ -540,7 +540,7 @@ export default function ChatInput({
                   px-4
                   py-3
                   text-xs
-                  text-gray-200
+                  text-(--foreground)
                   font-mono
                   whitespace-pre-wrap
                 "
@@ -557,13 +557,13 @@ export default function ChatInput({
             flex
             gap-2
             items-end
-            bg-[#303030]
+            bg-(--foreground)/8
             rounded-2xl
             px-2
             py-2
             border
-            border-[#3f3f3f]
-            focus-within:border-[#555]
+            border-(--border)
+            focus-within:border-(--foreground)/30
             transition
           "
         >
@@ -589,9 +589,9 @@ export default function ChatInput({
               h-9
               shrink-0
               rounded-lg
-              text-gray-300
-              hover:bg-[#404040]
-              hover:text-white
+              text-(--muted)
+              hover:bg-(--foreground)/10
+              hover:text-(--foreground)
               transition
               disabled:opacity-40
             "
@@ -618,8 +618,8 @@ export default function ChatInput({
 
               ${
                 stackOverflowEnabled
-                  ? "bg-[#404040] text-white"
-                  : "text-gray-300 hover:bg-[#404040] hover:text-white"
+                  ? "bg-(--foreground)/10 text-(--foreground)"
+                  : "text-(--muted) hover:bg-var(--foreground)/10 hover:text-(--foreground)"
               }
 
               disabled:opacity-40
@@ -646,8 +646,8 @@ export default function ChatInput({
                 w-72
                 rounded-xl
                 border
-                border-[#3f3f3f]
-                bg-[#252525]
+                border-(--border)
+                bg-(--card)
                 shadow-2xl
                 overflow-hidden
                 z-50
@@ -660,12 +660,12 @@ export default function ChatInput({
                   px-4
                   py-3
                   border-b
-                  border-[#3a3a3a]
+                  border-(--border)
                 "
               >
-                <p className="text-sm font-medium text-white">Plugins</p>
+                <p className="text-sm font-medium text-(--foreground)">Plugins</p>
 
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-(--muted) mt-1">
                   Give CacheAI access to useful tools.
                 </p>
               </div>
@@ -683,7 +683,7 @@ export default function ChatInput({
                   px-4
                   py-3
                   text-left
-                  hover:bg-[#303030]
+                  hover:bg-(--foreground)/8
                   transition
                 "
               >
@@ -710,11 +710,11 @@ export default function ChatInput({
                 {/* Information */}
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium">
+                  <p className="text-sm text-(--foreground) font-medium">
                     Stack Overflow
                   </p>
 
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-(--muted)">
                     Search developer questions
                   </p>
                 </div>
@@ -729,7 +729,7 @@ export default function ChatInput({
                     rounded-full
                     transition
 
-                    ${stackOverflowEnabled ? "bg-orange-500" : "bg-[#4a4a4a]"}
+                    ${stackOverflowEnabled ? "bg-orange-500" : "bg-(--foreground)/20"}
                   `}
                 >
                   <div
@@ -760,7 +760,7 @@ export default function ChatInput({
     px-4
     py-3
     text-left
-    hover:bg-[#303030]
+    hover:bg-(--foreground)/8
     transition
   "
               >
@@ -787,9 +787,9 @@ export default function ChatInput({
                 {/* Information */}
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium">Notion</p>
+                  <p className="text-sm text-(--foreground) font-medium">Notion</p>
 
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-(--muted)">
                     Search your Notion workspace
                   </p>
                 </div>
@@ -804,7 +804,7 @@ export default function ChatInput({
       rounded-full
       transition
 
-      ${notionEnabled ? "bg-white" : "bg-[#4a4a4a]"}
+      ${notionEnabled ? "bg-white" : "bg-(--foreground)/20"}
     `}
                 >
                   <div
@@ -828,10 +828,10 @@ export default function ChatInput({
                   px-4
                   py-2
                   border-t
-                  border-[#3a3a3a]
+                  border-(--border)
                 "
               >
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-(--muted)">
                   {stackOverflowEnabled && notionEnabled
                     ? "Stack Overflow and Notion are enabled."
                     : stackOverflowEnabled
@@ -863,14 +863,14 @@ export default function ChatInput({
               flex-1
               min-w-0
               bg-transparent
-              text-white
+              text-(--foreground)
               resize-none
               outline-none
               border-none
               px-2
               py-2
               leading-6
-              placeholder:text-gray-500
+              placeholder:text-(--muted)
               max-h-50
               overflow-y-hidden
             "
@@ -894,7 +894,7 @@ export default function ChatInput({
               ${
                 voiceMode
                   ? "bg-blue-500 text-white hover:bg-blue-600"
-                  : "text-gray-300 hover:bg-[#404040] hover:text-white"
+                  : "text-(--muted) hover:bg-(--foreground)/10 hover:text-(--foreground)"
               }
 
               disabled:opacity-40
@@ -915,8 +915,8 @@ export default function ChatInput({
             disabled={loading || (!text.trim() && !file)}
             title="Send"
             className="
-              bg-white
-              text-black
+              bg-(--foreground)
+              text-(--background)
               rounded-lg
               w-9
               h-9
@@ -927,7 +927,7 @@ export default function ChatInput({
               disabled:opacity-40
               disabled:cursor-not-allowed
               transition
-              hover:bg-gray-200
+              hover:opacity-90
             "
           >
             <Send size={18} />
@@ -938,7 +938,7 @@ export default function ChatInput({
           className="
             text-center
             text-[11px]
-            text-gray-600
+            text-(--muted)
             mt-2
           "
         >

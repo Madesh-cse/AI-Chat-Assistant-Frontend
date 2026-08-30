@@ -243,7 +243,7 @@ export default function Sidebar({
           rounded-xl
           transition
 
-          ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#1e1e1e]"}
+          ${isActive ? "bg-(--foreground)/10" : "hover:bg-(--foreground)/5"}
         `}
       >
         <button
@@ -264,8 +264,8 @@ export default function Sidebar({
 
             ${
               isActive
-                ? "text-white"
-                : "text-gray-400 group-hover:text-gray-200"
+                ? "text-(--foreground)"
+                : "text-(--muted) group-hover:text-(--foreground)"
             }
           `}
         >
@@ -284,12 +284,12 @@ export default function Sidebar({
 
             ${
               chat.is_pinned
-                ? "text-white opacity-100"
-                : "text-gray-500 opacity-0 group-hover:opacity-100"
+                ? "`text-(--foreground) opacity-100"
+                : "text-(--muted) opacity-0 group-hover:opacity-100"
             }
 
-            hover:bg-[#3a3a3a]
-            hover:text-white
+            hover:bg-(--foreground)/10
+            hover:text-(--foreground)
             disabled:opacity-50
           `}
         >
@@ -305,10 +305,10 @@ export default function Sidebar({
             mr-1
             p-2
             rounded-md
-            text-gray-500
+            text-(--muted)
             opacity-0
             group-hover:opacity-100
-            hover:bg-[#3a3a3a]
+            hover:bg-(--foreground)/10
             hover:text-red-400
             disabled:opacity-50
             transition
@@ -346,8 +346,10 @@ export default function Sidebar({
           h-screen
           flex
           flex-col
-          bg-[#171717]
-          text-[#ececec]
+          bg-(--sidebar)
+          text-(--foreground)
+          border-r
+          border-(--border)
           shrink-0
           transition-transform
           md:transition-[width]
@@ -366,7 +368,7 @@ export default function Sidebar({
           className="
             shrink-0
             p-3
-            bg-[#171717]
+            bg-(--sidebar)
             z-20
           "
         >
@@ -412,9 +414,9 @@ export default function Sidebar({
                 md:flex
                 p-2
                 rounded-lg
-                text-gray-400
-                hover:bg-[#242424]
-                hover:text-white
+                text-(--muted)
+                hover:bg-(--foreground)/10
+                hover:text-(--foreground)
                 transition
                 shrink-0
               "
@@ -435,9 +437,9 @@ export default function Sidebar({
                 md:hidden
                 p-2
                 rounded-lg
-                text-gray-400
-                hover:bg-[#242424]
-                hover:text-white
+                text-(--muted)
+                hover:bg-(--foreground)/10
+                hover:text-(--foreground)
                 transition
                 shrink-0
               "
@@ -462,8 +464,8 @@ export default function Sidebar({
               rounded-xl
               px-3
               py-2.5
-              text-gray-200
-              hover:bg-[#242424]
+              text-(--foreground)
+              hover:bg-(--foreground)/10
               disabled:opacity-50
               disabled:cursor-not-allowed
               transition
@@ -490,10 +492,10 @@ export default function Sidebar({
               rounded-xl
               px-3
               py-2.5
-              hover:bg-[#242424]
+              hover:bg-(--foreground)/10
               transition
               text-sm
-              text-gray-200
+              text-(--foreground)
 
               ${collapsed ? "md:justify-center md:px-0" : ""}
             `}
@@ -504,7 +506,7 @@ export default function Sidebar({
               className={`flex items-center gap-3 flex-1 ${hideWhenCollapsed}`}
             >
               <span>Search chats</span>
-              <span className="ml-auto text-xs text-gray-500">Ctrl K</span>
+              <span className="ml-auto text-xs text-(--muted)">Ctrl K</span>
             </span>
           </button>
         </div>
@@ -532,9 +534,9 @@ export default function Sidebar({
                 px-3
                 py-2
                 text-sm
-                text-gray-300
-                hover:bg-[#1e1e1e]
-                hover:text-white
+                text-(--muted)
+                hover:bg-(--foreground)/5
+                hover:text-(--foreground)
                 transition
 
                 ${collapsed ? "md:justify-center md:px-0" : ""}
@@ -556,9 +558,9 @@ export default function Sidebar({
                 px-3
                 py-2
                 text-sm
-                text-gray-300
-                hover:bg-[#1e1e1e]
-                hover:text-white
+                text-(--muted)
+                hover:bg-(--foreground)/5
+                hover:text-(--foreground)
                 transition
 
                 ${collapsed ? "md:justify-center md:px-0" : ""}
@@ -587,8 +589,8 @@ export default function Sidebar({
 
                 ${
                   showPlugins
-                    ? "bg-[#2a2a2a] text-white"
-                    : "text-gray-300 hover:bg-[#1e1e1e] hover:text-white"
+                    ? "bg-(--foreground)/10 text-(--foreground)"
+                    : "text-(--muted) hover:bg-(--foreground)/5 hover:text-(--foreground)"
                 }
               `}
             >
@@ -610,7 +612,7 @@ export default function Sidebar({
                     py-1.5
                     text-xs
                     font-medium
-                    text-gray-500
+                    text-(--muted)
                   "
                 >
                   <Pin size={12} className="fill-current" />
@@ -628,7 +630,7 @@ export default function Sidebar({
                   px-3
                   py-3
                   text-sm
-                  text-gray-500
+                  text-(--muted)
                 "
               >
                 Loading conversations...
@@ -641,7 +643,7 @@ export default function Sidebar({
                   px-3
                   py-3
                   text-sm
-                  text-gray-500
+                  text-(--muted)
                 "
               >
                 No conversations yet.
@@ -656,7 +658,7 @@ export default function Sidebar({
                     py-1.5
                     text-xs
                     font-medium
-                    text-gray-500
+                    text-(--muted)
                   "
                 >
                   {group.label}
@@ -689,7 +691,7 @@ export default function Sidebar({
               rounded-xl
               px-2
               py-2
-              hover:bg-[#242424]
+              hover:bg-(--foreground)/10
               transition
 
               ${collapsed ? "md:justify-center md:px-0" : ""}
@@ -701,13 +703,13 @@ export default function Sidebar({
                 w-7
                 shrink-0
                 rounded-full
-                bg-[#3a3a3a]
+                bg-(--foreground)/15
                 flex
                 items-center
                 justify-center
                 text-xs
                 font-medium
-                text-white
+                text-(--foreground)
               "
             >
               {userInitial}
@@ -717,37 +719,37 @@ export default function Sidebar({
               className={`min-w-0 flex flex-1 items-center gap-2 ${hideWhenCollapsed}`}
             >
               <div className="min-w-0 flex flex-col items-start">
-                <span className="text-sm text-gray-200 truncate max-w-40">
+                <span className="text-sm text-(--foreground) truncate max-w-40">
                   {userName}
                 </span>
 
                 {userEmail && (
-                  <span className="text-xs text-gray-500 truncate max-w-40">
+                  <span className="text-xs text-(--muted) truncate max-w-40">
                     {userEmail}
                   </span>
                 )}
               </div>
 
-              <Settings size={15} className="ml-auto shrink-0 text-gray-500" />
+              <Settings size={15} className="ml-auto shrink-0 text-(--muted)" />
             </div>
           </button>
-
-          {settingsOpen && (
-            <SettingsModal onClose={() => setSettingsOpen(false)} />
-          )}
         </div>
-
-        {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
-
-        {chatPendingDelete && (
-          <DeleteConversationModal
-            title={chatPendingDelete.title}
-            isDeleting={deletingChatId === chatPendingDelete.id}
-            onConfirm={handleConfirmDelete}
-            onCancel={() => setChatPendingDelete(null)}
-          />
-        )}
       </aside>
+
+      {settingsOpen && (
+        <SettingsModal onClose={() => setSettingsOpen(false)} />
+      )}
+
+      {showPlugins && <PluginPanel onClose={() => setShowPlugins(false)} />}
+
+      {chatPendingDelete && (
+        <DeleteConversationModal
+          title={chatPendingDelete.title}
+          isDeleting={deletingChatId === chatPendingDelete.id}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setChatPendingDelete(null)}
+        />
+      )}
     </>
   );
 }

@@ -518,7 +518,7 @@ You can now ask questions about this PDF.
   }
 
   return (
-    <div className="flex h-screen bg-[#212121] text-white">
+    <div className="flex h-screen bg-(--background) text-(--foreground)">
       <Sidebar
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
@@ -541,9 +541,9 @@ You can now ask questions about this PDF.
               m-2
               p-2
               rounded-lg
-              text-gray-300
-              hover:bg-[#2a2a2a]
-              hover:text-white
+              text-(--muted)
+              hover:bg-(--foreground)/10
+              hover:text-(--foreground)
               transition
             "
           >

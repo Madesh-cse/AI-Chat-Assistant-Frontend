@@ -55,18 +55,15 @@ export default function Header() {
       className="
         h-14
         border-b
-        border-[#2f2f2f]
-        bg-[#212121]
-        text-white
+        border-(--border)
+        bg-(--background)
+        text-(--foreground)
         flex
         items-center
         justify-between
         px-4
       "
     >
-      {/* =========================================
-          LEFT - NAME / MODEL DROPDOWN
-      ========================================= */}
 
       <div className="relative" ref={modelMenuRef}>
         <button
@@ -81,8 +78,8 @@ export default function Header() {
             py-1.5
             font-medium
             text-sm
-            text-gray-200
-            hover:bg-[#2a2a2a]
+            text-(--foreground)
+            hover:bg-(--foreground)/10
             transition
           "
         >
@@ -104,8 +101,8 @@ export default function Header() {
               w-56
               rounded-xl
               border
-              border-[#3f3f3f]
-              bg-[#252525]
+              border-(--border)
+              bg-(--card)
               shadow-2xl
               overflow-hidden
               z-50
@@ -117,7 +114,7 @@ export default function Header() {
                 py-2.5
                 text-xs
                 font-medium
-                text-gray-500
+                text-(--muted)
               "
             >
               Model
@@ -136,14 +133,14 @@ export default function Header() {
                 py-2.5
                 text-left
                 text-sm
-                text-white
-                hover:bg-[#303030]
+                text-(--foreground)
+                hover:bg-(--foreground)/10
                 transition
               "
             >
               <div className="flex flex-col items-start">
                 <span>{CURRENT_MODEL}</span>
-                <span className="text-xs text-gray-500">Local AI</span>
+                <span className="text-xs text-(--muted)">Local AI</span>
               </div>
 
               <Check size={15} className="text-[#D97757]" />
@@ -165,9 +162,9 @@ export default function Header() {
           className="
             p-2
             rounded-lg
-            text-gray-300
-            hover:bg-[#303030]
-            hover:text-white
+            text-(--muted)
+            hover:bg-(--foreground)/10
+            hover:text-(--foreground)
             transition
           "
         >
@@ -184,9 +181,9 @@ export default function Header() {
             className="
               p-2
               rounded-lg
-              text-gray-300
-              hover:bg-[#303030]
-              hover:text-white
+              text-(--muted)
+              hover:bg-(--foreground)/10
+              hover:text-(--foreground)
               transition
             "
           >
@@ -204,8 +201,8 @@ export default function Header() {
                 w-48
                 rounded-xl
                 border
-                border-[#3f3f3f]
-                bg-[#252525]
+                border-var(--border)
+                bg-var(--card)
                 shadow-2xl
                 overflow-hidden
                 z-50
@@ -226,7 +223,7 @@ export default function Header() {
                   text-left
                   text-sm
                   text-red-400
-                  hover:bg-[#303030]
+                  hover:bg-(--foreground)/10
                   hover:text-red-300
                   transition
                 "
