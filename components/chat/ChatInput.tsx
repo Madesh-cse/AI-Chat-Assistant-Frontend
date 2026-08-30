@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import VoiceButton from "../voice/VoiceButton";
+import { useSettings } from "@/context/SettingsContext";
 
 interface ChatInputProps {
   onSend: (
@@ -20,6 +21,7 @@ interface ChatInputProps {
     file: File | null,
     stackOverflowEnabled: boolean,
     notionEnabled: boolean,
+    language: string,
   ) => void;
 
   loading: boolean;
@@ -44,16 +46,6 @@ function formatFileSize(bytes: number): string {
 
   return `${mb.toFixed(1)} MB`;
 }
-
-// PASTE-TO-ATTACHMENT THRESHOLDS
-//
-// Pasting more than this many characters, or this many lines, turns
-// the paste into a "Pasted text" card instead of inserting it inline
-// into the textarea - mirrors Claude's behavior for large pastes.
-// Small snippets (a few lines, a short paragraph) stay as normal
-// inline text in the textarea - only genuinely large content becomes
-// a card.
-
 const PASTE_CHAR_THRESHOLD = 1500;
 const PASTE_LINE_THRESHOLD = 15;
 
@@ -62,9 +54,6 @@ interface PastedContent {
   lineCount: number;
   looksLikeCode: boolean;
 }
-
-// Light heuristic to label the card "Pasted code" vs "Pasted text" -
-// not meant to be a real language detector, just a nicer label.
 
 function analyzePastedText(raw: string): PastedContent {
   const lineCount = raw.split("\n").length;
@@ -91,6 +80,8 @@ export default function ChatInput({
   voiceMode,
   onVoiceModeChange,
 }: ChatInputProps) {
+  const { language } = useSettings();
+
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [pastedContent, setPastedContent] = useState<PastedContent | null>(
@@ -102,6 +93,7 @@ export default function ChatInput({
   const [notionEnabled, setnotionEnabled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
+  
 
   function resizeTextarea() {
     const textarea = textInputRef.current;
@@ -133,16 +125,13 @@ export default function ChatInput({
       return;
     }
 
-    // Fold the pasted block back into the outgoing message (wrapped
-    // as a fenced block) so the backend still just sees plain text -
-    // only the composer UI treats it as a separate attachment.
     const finalText = pastedContent
       ? [cleanText, "```\n" + pastedContent.text + "\n```"]
           .filter(Boolean)
           .join("\n\n")
       : cleanText;
 
-    onSend(finalText, file, stackOverflowEnabled, notionEnabled);
+    onSend(finalText, file, stackOverflowEnabled, notionEnabled,language,);
 
     setText("");
 
@@ -189,16 +178,10 @@ export default function ChatInput({
       lineCount > PASTE_LINE_THRESHOLD;
 
     if (!isLargePaste) {
-      // Small paste - let the browser insert it inline as normal.
       return;
     }
-
-    // Large paste - keep it out of the textarea and show it as a
-    // collapsed attachment card instead.
     event.preventDefault();
-
     setPastedContent(analyzePastedText(pastedText));
-
     requestAnimationFrame(() => {
       textInputRef.current?.focus();
     });
@@ -206,9 +189,7 @@ export default function ChatInput({
 
   function removePastedContent() {
     setPastedContent(null);
-
     setPastedPreviewOpen(false);
-
     textInputRef.current?.focus();
   }
 
@@ -232,7 +213,7 @@ export default function ChatInput({
     }
 
     if (voiceMode) {
-      onSend(cleanTranscript, null, stackOverflowEnabled, notionEnabled);
+      onSend(cleanTranscript, null, stackOverflowEnabled, notionEnabled, language);
 
       return;
     }

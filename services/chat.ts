@@ -8,6 +8,7 @@ export async function sendMessage(
   conversationId?: number,
   stackOverflowEnabled: boolean = false,
   notionEnabled: boolean = false,
+  language: string = "English"
 ): Promise<ChatResponse> {
 
   const token = localStorage.getItem("access_token");
@@ -24,7 +25,8 @@ export async function sendMessage(
       message,
       conversation_id: conversationId,
       stack_overflow_enabled: stackOverflowEnabled,
-      notion_enabled: notionEnabled
+      notion_enabled: notionEnabled,
+      language,
     }),
   });
 
@@ -41,7 +43,10 @@ export async function sendMessage(
 export async function streamMessage(
   message: string,
   conversationId: number | null,
+  stackOverflowEnabled: boolean,
+  notionEnabled: boolean,
   onChunk: (chunk: string) => void,
+  language: string = "English",
 ) {
   if (conversationId === null) {
     throw new Error("Conversation ID is required");
@@ -60,6 +65,9 @@ export async function streamMessage(
     body: JSON.stringify({
       message,
       conversation_id: conversationId,
+      stack_overflow_enabled: stackOverflowEnabled,
+      notion_enavled: notionEnabled,
+      language,
     }),
   });
 

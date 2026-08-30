@@ -10,6 +10,7 @@ import { Menu } from "lucide-react";
 import { Message } from "@/types/chat";
 import { streamMessage } from "@/services/chat";
 import { useChatStore } from "@/store/chatStore";
+import  { useSettings } from "../../context/SettingsContext"
 
 const API_URL = "http://localhost:8000";
 
@@ -39,6 +40,7 @@ export default function ChatBox() {
     replaceMessage,
     loadConversations,
   } = useChatStore();
+  const { language } = useSettings();
 
   const [loading, setLoading] = useState(false);
   const [slowResponse, setSlowResponse] = useState(false);
@@ -187,10 +189,14 @@ export default function ChatBox() {
     text: string,
     file: File | null = null,
     stackOverflowEnabled: boolean,
+    notionEnabled: boolean,
+    language: string,
   ) {
     console.log("Message:", text);
     console.log("File:", file);
     console.log("Stack Overflow:", stackOverflowEnabled);
+    console.log("notion enable", notionEnabled)
+    console.log("LANGUAGE:", language);
     if (loading) {
       return;
     }
@@ -205,7 +211,7 @@ export default function ChatBox() {
       return;
     }
 
-    await handleNormalChat(text);
+    await handleNormalChat(text,  stackOverflowEnabled, notionEnabled,language,);
   }
   // PDF UPLOAD
 
@@ -407,7 +413,7 @@ You can now ask questions about this PDF.
 
   // NORMAL CHAT
 
-  async function handleNormalChat(text: string) {
+  async function handleNormalChat(text: string, stackOverflowEnabled: boolean,notionEnabled: boolean,language: string,) {
     const cleanText = text.trim();
 
     if (!cleanText) {
@@ -433,7 +439,6 @@ You can now ask questions about this PDF.
 
     // Temporary AI message
     const aiMessageId = createTempMessageId();
-
     const aiMessage: Message = {
       id: aiMessageId,
       conversation_id: conversationId,
@@ -455,7 +460,7 @@ You can now ask questions about this PDF.
     }, 10000);
 
     try {
-      await streamMessage(cleanText, conversationId, (chunk) => {
+      await streamMessage(cleanText, conversationId,  stackOverflowEnabled,notionEnabled,(chunk) => {
         if (!chunk) {
           return;
         }
@@ -465,22 +470,13 @@ You can now ask questions about this PDF.
           hasReceivedResponse = true;
 
           setSlowResponse(false);
-
-          // IMPORTANT:
-          // Replace the slow/temporary message with the first
-          // actual AI chunk.
           useChatStore.getState().replaceMessage(aiMessageId, chunk);
 
           return;
         }
-
-        // Remaining chunks
         useChatStore.getState().updateMessage(aiMessageId, chunk);
-      });
-
-      // Check whether AI actually returned anything
+      }, language);
       const state = useChatStore.getState();
-
       const currentChat = state.conversations.find(
         (chat) => chat.id === conversationId,
       );
