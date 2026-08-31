@@ -1,0 +1,19 @@
+{
+  "newChat": "New Chat",
+  "search": "Search",
+  "settings": "Settings",
+  "delete": "Delete",
+  "clearChat": "Clear Chat",
+  "send": "Send",
+  "cancel": "Cancel",
+  "save": "Save",
+  "close": "Close",
+  "language": "Language",
+  "typeMessage": "Type your message...",
+  "welcome": "How can I help you today?",
+  "thinking": "Thinking...",
+  "loading": "Loading...",
+  "noConversations": "No conversations yet",
+  "deleteConversation": "Delete conversation",
+  "confirmDelete": "Are you sure you want to delete this conversation?"
+}
