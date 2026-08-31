@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import type { MouseEvent } from "react";
 
 import { useChatStore } from "@/store/chatStore";
@@ -30,19 +31,9 @@ type Conversation = ReturnType<
 >["conversations"][number];
 
 interface SidebarProps {
-  // Controls the off-canvas drawer on small screens (< md). Owned by
-  // the parent (ChatBox) so the mobile menu trigger can live in the
-  // header row instead of floating over content.
   mobileOpen?: boolean;
   onMobileClose?: () => void;
 }
-
-// RECENCY GROUPING
-//
-// Mirrors Claude's own "Today / Yesterday / Previous 7 Days / Older"
-// grouping. Reads `updated_at`, falling back to `created_at` - rename
-// this to match whatever field your actual Conversation type uses if
-// it differs, or every chat will land in "Older".
 
 function getConversationTimestamp(chat: Conversation): number {
   const raw =
@@ -66,15 +57,16 @@ function groupByRecency(chats: Conversation[]) {
   ).getTime();
 
   const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
-
   const sevenDaysAgo = startOfToday - 7 * 24 * 60 * 60 * 1000;
-
-  const groups: { label: string; chats: Conversation[] }[] = [
-    { label: "Today", chats: [] },
-    { label: "Yesterday", chats: [] },
-    { label: "Previous 7 Days", chats: [] },
-    { label: "Older", chats: [] },
-  ];
+  const groups: {
+  label: "today" | "yesterday" | "previous7Days" | "older";
+  chats: Conversation[];
+}[] = [
+  { label: "today", chats: [] },
+  { label: "yesterday", chats: [] },
+  { label: "previous7Days", chats: [] },
+  { label: "older", chats: [] },
+];
 
   for (const chat of chats) {
     const timestamp = getConversationTimestamp(chat);
@@ -97,6 +89,7 @@ export default function Sidebar({
   mobileOpen = false,
   onMobileClose = () => {},
 }: SidebarProps) {
+  const { t } = useLanguage();
   const {
     conversations,
     activeConversation,
@@ -152,10 +145,6 @@ export default function Sidebar({
 
     try {
       await createChat();
-
-      // Close the mobile drawer after a successful create - no-op on
-      // desktop where onMobileClose is a default noop / md overrides
-      // the transform anyway.
       onMobileClose();
     } catch (error) {
       console.error("Failed to create chat:", error);
@@ -219,14 +208,7 @@ export default function Sidebar({
   const recencyGroups = groupByRecency(normalConversations);
 
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
-
-  // Elements that collapse away on desktop (md+) when `collapsed` is
-  // true, but must always stay visible on mobile - since on mobile
-  // the sidebar is a full-width overlay drawer, not an icon rail.
-  // Default (no breakpoint prefix) = visible; md:hidden only kicks in
-  // once we're at md+ and collapsed is true.
   const hideWhenCollapsed = collapsed ? "md:hidden" : "";
-
   function renderConversation(chat: (typeof conversations)[number]) {
     const isActive = activeConversation === chat.id;
 
@@ -275,7 +257,7 @@ export default function Sidebar({
           type="button"
           disabled={isDeleting}
           onClick={(event) => handleTogglePin(event, chat.id)}
-          title={chat.is_pinned ? "Unpin conversation" : "Pin conversation"}
+          title={chat.is_pinned ? t("unpinConversation") :  t("pinConversation")}
           className={`
             shrink-0
             p-2
@@ -299,7 +281,7 @@ export default function Sidebar({
           type="button"
           disabled={isDeleting}
           onClick={(event) => handleRequestDelete(event, chat)}
-          title="Delete conversation"
+          title={t("deleteConversation")}
           className="
             shrink-0
             mr-1
@@ -477,13 +459,13 @@ export default function Sidebar({
             <SquarePen size={18} className="shrink-0" />
 
             <span className={hideWhenCollapsed}>
-              {creatingChat ? "Creating..." : "New chat"}
+              {creatingChat ? t("creating") : t("newChat")}
             </span>
           </button>
 
           <button
             type="button"
-            title="Search chats"
+            title={t("searchChats")}
             className={`
               w-full
               flex
@@ -505,7 +487,7 @@ export default function Sidebar({
             <span
               className={`flex items-center gap-3 flex-1 ${hideWhenCollapsed}`}
             >
-              <span>Search chats</span>
+              <span>{t("searchChats")}</span>
               <span className="ml-auto text-xs text-(--muted)">Ctrl K</span>
             </span>
           </button>
@@ -524,7 +506,7 @@ export default function Sidebar({
           <div className="mt-1 space-y-1">
             <button
               type="button"
-              title="Projects"
+              title={t("projects")}
               className={`
                 w-full
                 flex
@@ -543,12 +525,11 @@ export default function Sidebar({
               `}
             >
               <FolderKanban size={17} className="shrink-0" />
-
-              <span className={hideWhenCollapsed}>Projects</span>
+              <span className={hideWhenCollapsed}>{t("projects")}</span>
             </button>
             <button
               type="button"
-              title="Schedule"
+              title={t("schedule")}
               className={`
                 w-full
                 flex
@@ -567,13 +548,12 @@ export default function Sidebar({
               `}
             >
               <CalendarClock size={17} className="shrink-0" />
-
-              <span className={hideWhenCollapsed}>Schedule</span>
+             <span className={hideWhenCollapsed}>{t("schedule")}</span>
             </button>
             <button
               type="button"
               onClick={() => setShowPlugins(true)}
-              title="Plugins"
+              title={t("plugins")}
               className={`
                 w-full
                 flex
@@ -595,11 +575,9 @@ export default function Sidebar({
               `}
             >
               <Plug size={17} className="shrink-0" />
-
-              <span className={hideWhenCollapsed}>Plugins</span>
+              <span className={hideWhenCollapsed}>{t("plugins")}</span>
             </button>
           </div>
-
           <div className={`mt-3 ${hideWhenCollapsed}`}>
             {pinnedConversations.length > 0 && (
               <div className="mb-4">
@@ -616,7 +594,7 @@ export default function Sidebar({
                   "
                 >
                   <Pin size={12} className="fill-current" />
-                  <span>Pinned</span>
+                  <span>{t("pinned")}</span>
                 </div>
                 <div className="space-y-0.5">
                   {pinnedConversations.map(renderConversation)}
@@ -633,7 +611,7 @@ export default function Sidebar({
                   text-(--muted)
                 "
               >
-                Loading conversations...
+               {t("loadingConversations")}
               </div>
             )}
 
@@ -646,7 +624,7 @@ export default function Sidebar({
                   text-(--muted)
                 "
               >
-                No conversations yet.
+                {t("noConversations")}
               </div>
             )}
 
@@ -661,7 +639,7 @@ export default function Sidebar({
                     text-(--muted)
                   "
                 >
-                  {group.label}
+                   {t(group.label)}
                 </p>
                 <div className="space-y-0.5">
                   {group.chats.map(renderConversation)}

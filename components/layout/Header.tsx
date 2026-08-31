@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Share, MoreVertical, LogOut, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { useChatStore } from "@/store/chatStore";
 
@@ -10,12 +11,11 @@ const CURRENT_MODEL = "qwen2.5:3b";
 
 export default function Header() {
   const router = useRouter();
-
-  useChatStore(); // kept for parity - conversation state no longer read here
-
+  const { t } = useLanguage();
+  // kept for parity - conversation state no longer read here
+  useChatStore(); 
   const [moreOpen, setMoreOpen] = useState(false);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
-
   const modelMenuRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -117,7 +117,7 @@ export default function Header() {
                 text-(--muted)
               "
             >
-              Model
+              {t("model")}
             </div>
 
             <button
@@ -140,7 +140,7 @@ export default function Header() {
             >
               <div className="flex flex-col items-start">
                 <span>{CURRENT_MODEL}</span>
-                <span className="text-xs text-(--muted)">Local AI</span>
+                <span className="text-xs text-(--muted)">{t("localAI")}</span>
               </div>
 
               <Check size={15} className="text-[#D97757]" />
@@ -158,7 +158,7 @@ export default function Header() {
 
         <button
           type="button"
-          title="Share"
+          title={t("share")}
           className="
             p-2
             rounded-lg
@@ -176,7 +176,7 @@ export default function Header() {
         <div className="relative" ref={moreMenuRef}>
           <button
             type="button"
-            title="More"
+            title={t("more")}
             onClick={() => setMoreOpen((current) => !current)}
             className="
               p-2
@@ -229,8 +229,7 @@ export default function Header() {
                 "
               >
                 <LogOut size={17} />
-
-                <span>Logout</span>
+                <span>{t("logout")}</span>
               </button>
             </div>
           )}
