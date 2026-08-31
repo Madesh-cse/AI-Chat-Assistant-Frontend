@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ThemeProvider } from "../context/ThemeContext";
 import { SettingsProvider } from "../context/SettingsContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 export default function RootLayout({
   children,
@@ -12,7 +13,9 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <SettingsProvider>
-            {children}
+            <LanguageProvider>
+              {children}
+            </LanguageProvider>
           </SettingsProvider>
         </ThemeProvider>
       </body>

@@ -9,17 +9,37 @@
   --border: #e5e5e5;
 
   --muted: #6b7280;
+  --markdown-text: #374151;
+
+  /* Code */
+  --code-bg: #f6f6f6;
+  --code-header: #eeeeee;
+  --code-badge: #e2e2e2;
+  --code-muted: #555555;
+
+  --scrollbar-thumb: #d4d4d4;
+  --scrollbar-thumb-hover: #b5b5b5;
 }
 
 .dark {
   --background: #202123;
-  --foreground: #ffffff;
+  --foreground: #ececec;
 
   --sidebar: #171717;
   --card: #202123;
   --border: rgba(255, 255, 255, 0.1);
 
   --muted: #9ca3af;
+  --markdown-text: #d1d1d1;
+
+  /* Code */
+  --code-bg: #181818;
+  --code-header: #111111;
+  --code-badge: #2a2a2a;
+  --code-muted: #d1d1d1;
+
+  --scrollbar-thumb: #303030;
+  --scrollbar-thumb-hover: #444444;
 }
 
 .light {
@@ -31,6 +51,16 @@
   --border: #e5e5e5;
 
   --muted: #6b7280;
+  --markdown-text: #374151;
+
+  /* Code */
+  --code-bg: #f6f6f6;
+  --code-header: #eeeeee;
+  --code-badge: #e2e2e2;
+  --code-muted: #555555;
+
+  --scrollbar-thumb: #d4d4d4;
+  --scrollbar-thumb-hover: #b5b5b5;
 }
 
 html,
@@ -42,7 +72,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #303030 transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 
@@ -59,13 +89,13 @@ body {
 
 
 ::-webkit-scrollbar-thumb {
-  background: #303030;
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
 }
 
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #444444;
+  background: var(--scrollbar-thumb-hover);
 }
 
 
