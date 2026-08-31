@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { X, Sun, Moon, Monitor, Check } from "lucide-react";
+
 import { useTheme } from "../../context/ThemeContext";
+import { useLanguage, type Language } from "../../context/LanguageContext";
+
 import ConnectedApps from "./ConnectedApps";
-import { useSettings, Language } from "../../context/SettingsContext";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -19,24 +21,103 @@ type Personality =
   | "Detailed"
   | "Technical";
 
+type SectionKey =
+  | "general"
+  | "appearance"
+  | "connectedApps"
+  | "notifications"
+  | "personalization"
+  | "dataPrivacy"
+  | "about";
+
 export default function SettingsModal({ onClose }: SettingsModalProps) {
-  const [activeSection, setActiveSection] = useState("General");
+  const [activeSection, setActiveSection] = useState<SectionKey>("general");
+
   const [accent, setAccent] = useState<Accent>("blue");
+
   const [personality, setPersonality] =
     useState<Personality>("Helpful & concise");
 
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage } = useSettings();
 
-  const sections = [
-    "General",
-    "Appearance",
-    "Connected Apps",
-    "Notifications",
-    "Personalization",
-    "Data & Privacy",
-    "About",
+  const { language, setLanguage, t } = useLanguage();
+
+  const sections: {
+    key: SectionKey;
+    label: string;
+  }[] = [
+    {
+      key: "general",
+      label: t("general"),
+    },
+    {
+      key: "appearance",
+      label: t("appearance"),
+    },
+    {
+      key: "connectedApps",
+      label: t("connectedApps"),
+    },
+    {
+      key: "notifications",
+      label: t("notifications"),
+    },
+    {
+      key: "personalization",
+      label: t("personalization"),
+    },
+    {
+      key: "dataPrivacy",
+      label: t("dataPrivacy"),
+    },
+    {
+      key: "about",
+      label: t("about"),
+    },
   ];
+
+  const activeSectionLabel =
+    sections.find((section) => section.key === activeSection)?.label ??
+    t("general");
+
+  const personalityOptions: {
+    value: Personality;
+    title: string;
+    description: string;
+  }[] = [
+    {
+      value: "Helpful & concise",
+      title: t("helpfulConcise"),
+      description: t("helpfulConciseDescription"),
+    },
+    {
+      value: "Professional",
+      title: t("professional"),
+      description: t("professionalDescription"),
+    },
+    {
+      value: "Friendly",
+      title: t("friendly"),
+      description: t("friendlyDescription"),
+    },
+    {
+      value: "Detailed",
+      title: t("detailed"),
+      description: t("detailedDescription"),
+    },
+    {
+      value: "Technical",
+      title: t("technical"),
+      description: t("technicalDescription"),
+    },
+  ];
+
+  const accentLabels: Record<Accent, string> = {
+    blue: "Blue",
+    purple: "Purple",
+    green: "Green",
+    orange: "Orange",
+  };
 
   return (
     <div
@@ -71,6 +152,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           shadow-2xl
         "
       >
+        {/* Sidebar */}
+
         <div
           className="
             w-full
@@ -85,6 +168,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             lg:p-4
           "
         >
+          {/* Desktop header */}
+
           <div
             className="
               mb-6
@@ -95,7 +180,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               px-2
             "
           >
-            <h2 className="text-lg font-semibold">Settings</h2>
+            <h2 className="text-lg font-semibold">{t("settings")}</h2>
 
             <button
               type="button"
@@ -108,11 +193,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 hover:bg-(--hover)
                 hover:text-(--foreground)
               "
-              aria-label="Close settings"
+              aria-label={t("closeSettings")}
+              title={t("close")}
             >
               <X size={18} />
             </button>
           </div>
+
+          {/* Sections */}
+
           <div
             className="
               flex
@@ -129,8 +218,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             {sections.map((section) => (
               <button
                 type="button"
-                key={section}
-                onClick={() => setActiveSection(section)}
+                key={section.key}
+                onClick={() => setActiveSection(section.key)}
                 className={`
                   shrink-0
                   lg:w-full
@@ -143,18 +232,23 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   transition
 
                   ${
-                    activeSection === section
+                    activeSection === section.key
                       ? "bg-(--active) text-(--foreground)"
                       : "text-(--muted) hover:bg-(--hover) hover:text-(--foreground)"
                   }
                 `}
               >
-                {section}
+                {section.label}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Main content */}
+
         <div className="flex-1 min-h-0 overflow-y-auto">
+          {/* Header */}
+
           <div
             className="
               sticky
@@ -173,7 +267,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             "
           >
             <h3 className="text-lg sm:text-xl font-semibold">
-              {activeSection}
+              {activeSectionLabel}
             </h3>
 
             <button
@@ -187,18 +281,21 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 hover:bg-(--hover)
                 hover:text-(--foreground)
               "
-              aria-label="Close settings"
+              aria-label={t("closeSettings")}
+              title={t("close")}
             >
               <X size={20} />
             </button>
           </div>
 
           <div className="p-4 sm:p-8">
-            {activeSection === "General" && (
+            {/* General */}
+
+            {activeSection === "general" && (
               <div className="space-y-6">
                 <SettingRow
-                  title="Language"
-                  description="Choose the language used by the assistant."
+                  title={t("language")}
+                  description={t("languageDescription")}
                 >
                   <select
                     value={language}
@@ -206,74 +303,78 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       setLanguage(event.target.value as Language)
                     }
                     className="
-          min-w-32
-          cursor-pointer
-          rounded-lg
-          border
-          border-(--border)
-          bg-(--input-bg)
-          px-3
-          py-2
-          text-sm
-          text-(--foreground)
-          outline-none
-          transition
-          hover:border-(--border-hover)
-          focus:border-blue-500
-          focus:ring-2
-          focus:ring-blue-500/20
-        "
+                      min-w-32
+                      cursor-pointer
+                      rounded-lg
+                      border
+                      border-(--border)
+                      bg-(--input-bg)
+                      px-3
+                      py-2
+                      text-sm
+                      text-(--foreground)
+                      outline-none
+                      transition
+                      hover:border-(--border-hover)
+                      focus:border-blue-500
+                      focus:ring-2
+                      focus:ring-blue-500/20
+                    "
+                    aria-label={t("language")}
                   >
-                    <option value="en">English</option>
-                    <option value="ta">தமிழ் (Tamil)</option>
-                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="en">{t("english")}</option>
+
+                    <option value="ta">{t("tamil")}</option>
                   </select>
                 </SettingRow>
 
                 <SettingRow
-                  title="Enter to send"
-                  description="Press Enter to send a message."
+                  title={t("enterToSend")}
+                  description={t("enterToSendDescription")}
                 >
                   <Toggle defaultChecked />
                 </SettingRow>
 
                 <SettingRow
-                  title="Streaming responses"
-                  description="Show responses as they are generated."
+                  title={t("streamingResponses")}
+                  description={t("streamingResponsesDescription")}
                 >
                   <Toggle defaultChecked />
                 </SettingRow>
               </div>
             )}
-            {activeSection === "Appearance" && (
+
+            {/* Appearance */}
+
+            {activeSection === "appearance" && (
               <div className="space-y-8">
                 {/* Theme */}
 
                 <div>
-                  <h4 className="mb-2 font-medium">Theme</h4>
+                  <h4 className="mb-2 font-medium">{t("theme")}</h4>
 
                   <p className="mb-4 text-sm text-(--muted)">
-                    Choose how AI Chat Bot looks.
+                    {t("themeDescription")}
                   </p>
 
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     <ThemeButton
                       icon={<Sun size={20} />}
-                      label="Light"
+                      label={t("light")}
                       active={theme === "light"}
                       onClick={() => setTheme("light")}
                     />
 
                     <ThemeButton
                       icon={<Moon size={20} />}
-                      label="Dark"
+                      label={t("dark")}
                       active={theme === "dark"}
                       onClick={() => setTheme("dark")}
                     />
 
                     <ThemeButton
                       icon={<Monitor size={20} />}
-                      label="System"
+                      label={t("system")}
                       active={theme === "system"}
                       onClick={() => setTheme("system")}
                     />
@@ -283,10 +384,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 {/* Accent Color */}
 
                 <div>
-                  <h4 className="mb-2 font-medium">Accent color</h4>
+                  <h4 className="mb-2 font-medium">{t("accentColor")}</h4>
 
                   <p className="mb-4 text-sm text-(--muted)">
-                    Choose the primary color for the interface.
+                    {t("accentColorDescription")}
                   </p>
 
                   <div className="flex flex-wrap gap-3">
@@ -296,7 +397,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                           type="button"
                           key={color}
                           onClick={() => setAccent(color)}
-                          aria-label={`${color} accent`}
+                          aria-label={`${accentLabels[color]} accent`}
+                          title={`${accentLabels[color]} accent`}
+                          aria-pressed={accent === color}
                           className={`
                           relative
                           h-10
@@ -342,68 +445,45 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
             )}
 
-            {activeSection === "Connected Apps" && <ConnectedApps />}
-            {activeSection === "Notifications" && (
+            {/* Connected Apps */}
+
+            {activeSection === "connectedApps" && <ConnectedApps />}
+
+            {/* Notifications */}
+
+            {activeSection === "notifications" && (
               <div className="space-y-6">
                 <SettingRow
-                  title="Desktop notifications"
-                  description="Receive notifications for important events."
+                  title={t("desktopNotifications")}
+                  description={t("desktopNotificationsDescription")}
                 >
                   <Toggle />
                 </SettingRow>
 
                 <SettingRow
-                  title="Sound"
-                  description="Play a sound when a response is completed."
+                  title={t("sound")}
+                  description={t("soundDescription")}
                 >
                   <Toggle defaultChecked />
                 </SettingRow>
               </div>
             )}
 
-            {activeSection === "Personalization" && (
+            {/* Personalization */}
+
+            {activeSection === "personalization" && (
               <div className="space-y-8">
                 <div>
                   <h4 className="font-medium text-(--foreground)">
-                    Assistant personality
+                    {t("assistantPersonality")}
                   </h4>
 
                   <p className="mt-1 text-sm text-(--muted)">
-                    Choose how the assistant communicates with you.
+                    {t("assistantPersonalityDescription")}
                   </p>
 
                   <div className="mt-5 space-y-2">
-                    {[
-                      {
-                        value: "Helpful & concise" as Personality,
-                        title: "Helpful & concise",
-                        description:
-                          "Clear, direct answers without unnecessary detail.",
-                      },
-                      {
-                        value: "Professional" as Personality,
-                        title: "Professional",
-                        description:
-                          "Polished, structured, and suitable for work and business.",
-                      },
-                      {
-                        value: "Friendly" as Personality,
-                        title: "Friendly",
-                        description: "Warm, conversational, and approachable.",
-                      },
-                      {
-                        value: "Detailed" as Personality,
-                        title: "Detailed",
-                        description:
-                          "Thorough explanations with useful context and examples.",
-                      },
-                      {
-                        value: "Technical" as Personality,
-                        title: "Technical",
-                        description:
-                          "Precise, developer-focused answers with technical depth.",
-                      },
-                    ].map((option) => {
+                    {personalityOptions.map((option) => {
                       const selected = personality === option.value;
 
                       return (
@@ -411,27 +491,28 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                           key={option.value}
                           type="button"
                           onClick={() => setPersonality(option.value)}
+                          aria-pressed={selected}
                           className={`
-                            group
-                            flex
-                            w-full
-                            items-center
-                            justify-between
-                            gap-4
-                            rounded-xl
-                            border
-                            px-4
-                            py-3.5
-                            text-left
-                            transition-all
-                            duration-150
+                              group
+                              flex
+                              w-full
+                              items-center
+                              justify-between
+                              gap-4
+                              rounded-xl
+                              border
+                              px-4
+                              py-3.5
+                              text-left
+                              transition-all
+                              duration-150
 
-                            ${
-                              selected
-                                ? "border-blue-500/60 bg-blue-500/10"
-                                : "border-(--border) bg-(--card) hover:bg-(--hover) hover:border-(--border-hover)"
-                            }
-                          `}
+                              ${
+                                selected
+                                  ? "border-blue-500/60 bg-blue-500/10"
+                                  : "border-(--border) bg-(--card) hover:bg-(--hover) hover:border-(--border-hover)"
+                              }
+                            `}
                         >
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-(--foreground)">
@@ -443,35 +524,33 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                             </p>
                           </div>
 
-                          {/* Radio */}
-
                           <div
                             className={`
-                              flex
-                              h-5
-                              w-5
-                              shrink-0
-                              items-center
-                              justify-center
-                              rounded-full
-                              border
-                              transition
+                                flex
+                                h-5
+                                w-5
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-full
+                                border
+                                transition
 
-                              ${
-                                selected
-                                  ? "border-blue-500"
-                                  : "border-(--border) group-hover:border-(--muted)"
-                              }
-                            `}
+                                ${
+                                  selected
+                                    ? "border-blue-500"
+                                    : "border-(--border) group-hover:border-(--muted)"
+                                }
+                              `}
                           >
                             {selected && (
                               <div
                                 className="
-                                  h-2.5
-                                  w-2.5
-                                  rounded-full
-                                  bg-blue-500
-                                "
+                                    h-2.5
+                                    w-2.5
+                                    rounded-full
+                                    bg-blue-500
+                                  "
                               />
                             )}
                           </div>
@@ -483,18 +562,20 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </div>
             )}
 
-            {activeSection === "Data & Privacy" && (
+            {/* Data & Privacy */}
+
+            {activeSection === "dataPrivacy" && (
               <div className="space-y-6">
                 <SettingRow
-                  title="Chat history"
-                  description="Save conversations to your database."
+                  title={t("chatHistory")}
+                  description={t("chatHistoryDescription")}
                 >
                   <Toggle defaultChecked />
                 </SettingRow>
 
                 <SettingRow
-                  title="Improve responses"
-                  description="Allow conversations to be used for improving your assistant."
+                  title={t("improveResponses")}
+                  description={t("improveResponsesDescription")}
                 >
                   <Toggle />
                 </SettingRow>
@@ -513,29 +594,31 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     hover:bg-red-500/10
                   "
                 >
-                  Delete all conversations
+                  {t("deleteAllConversations")}
                 </button>
               </div>
             )}
 
-            {activeSection === "About" && (
+            {/* About */}
+
+            {activeSection === "about" && (
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-(--muted)">Application</p>
+                  <p className="text-sm text-(--muted)">{t("application")}</p>
 
-                  <p className="mt-1">AI Chat Bot</p>
+                  <p className="mt-1">{t("aiChatBot")}</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-(--muted)">Version</p>
+                  <p className="text-sm text-(--muted)">{t("version")}</p>
 
                   <p className="mt-1">1.0.0</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-(--muted)">AI Model</p>
+                  <p className="text-sm text-(--muted)">{t("aiModel")}</p>
 
-                  <p className="mt-1">Qwen 2.5 3B via Ollama</p>
+                  <p className="mt-1">{t("qwenOllama")}</p>
                 </div>
               </div>
             )}
@@ -545,6 +628,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     </div>
   );
 }
+
+/* -------------------------------- */
+/* Setting Row */
+/* -------------------------------- */
 
 function SettingRow({
   title,
@@ -581,6 +668,10 @@ function SettingRow({
   );
 }
 
+/* -------------------------------- */
+/* Toggle */
+/* -------------------------------- */
+
 function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
   const [enabled, setEnabled] = useState(defaultChecked);
 
@@ -596,6 +687,7 @@ function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
         shrink-0
         rounded-full
         transition
+
         ${enabled ? "bg-blue-500" : "bg-(--toggle-off)"}
       `}
     >
@@ -609,12 +701,17 @@ function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
           bg-white
           shadow-sm
           transition
+
           ${enabled ? "left-6" : "left-1"}
         `}
       />
     </button>
   );
 }
+
+/* -------------------------------- */
+/* Theme Button */
+/* -------------------------------- */
 
 function ThemeButton({
   icon,
@@ -631,6 +728,7 @@ function ThemeButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`
         flex
         flex-col
