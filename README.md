@@ -60,6 +60,8 @@ The frontend supports:
 ![image alt](https://github.com/Madesh-cse/AI-Chat-Assistant-Frontend/blob/cded0a048c70cc54fc0388d07409908a1bf99c29/Screenshot%20(72).png)
 ![image alt](https://github.com/Madesh-cse/AI-Chat-Assistant-Frontend/blob/cded0a048c70cc54fc0388d07409908a1bf99c29/Screenshot%20(73).png)
 ![image alt](https://github.com/Madesh-cse/AI-Chat-Assistant-Frontend/blob/cded0a048c70cc54fc0388d07409908a1bf99c29/Screenshot%20(74).png)
+![image alt](https://github.com/Madesh-cse/AI-Chat-Assistant-Frontend/blob/cded0a048c70cc54fc0388d07409908a1bf99c29/Screenshot%20(75).png)
+![image alt](https://github.com/Madesh-cse/AI-Chat-Assistant-Frontend/blob/cded0a048c70cc54fc0388d07409908a1bf99c29/Screenshot%20(76).png)
 
 ## ⚡ Streaming Responses
 
