@@ -51,6 +51,9 @@ The frontend supports:
 
 ---
 
+## Application Image
+![image alt](https://github.com/Madesh-cse/AI-Chat-Assistant-Frontend/blob/cded0a048c70cc54fc0388d07409908a1bf99c29/Screenshot%20(67).png)
+
 ## ⚡ Streaming Responses
 
 The application uses the browser `ReadableStream` API to consume streaming responses from the FastAPI backend.
