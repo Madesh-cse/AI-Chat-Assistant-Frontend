@@ -2,6 +2,7 @@ import "./globals.css";
 import { ThemeProvider } from "../context/ThemeContext";
 import { SettingsProvider } from "../context/SettingsContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import Providers from "./providers";
 
 export default function RootLayout({
   children,
@@ -11,13 +12,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider>
-          <SettingsProvider>
-            <LanguageProvider>
-              {children}
-            </LanguageProvider>
-          </SettingsProvider>
-        </ThemeProvider>
+        <Providers>
+          <ThemeProvider>
+            <SettingsProvider>
+              <LanguageProvider>
+                {children}
+              </LanguageProvider>
+            </SettingsProvider>
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

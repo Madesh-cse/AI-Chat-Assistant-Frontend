@@ -6,33 +6,23 @@ import ChatArea from "./ChatArea";
 import ChatInput from "./ChatInput";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Message } from "@/types/chat";
 import { streamMessage } from "@/services/chat";
 import { useChatStore } from "@/store/chatStore";
+import { useAuthStore } from "@/store/authStore";
 import { useSettings } from "../../context/SettingsContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// interface PDFUploadResponse {
-//   success: boolean;
-//   id: number;
-//   filename: string;
-//   conversation_id: number;
-//   pages: number;
-//   chunks: number;
-//   message: string;
-// }
-
-// interface PDFQuestionResponse {
-//   success: boolean;
-//   pdf_id: number;
-//   filename: string;
-//   question: string;
-//   answer: string;
-// }
-
 export default function ChatBox() {
+  const router = useRouter();
+
+  // AUTH STATE
+  const token = useAuthStore((state) => state.token);
+  const authInitialized = useAuthStore((state) => state.initialized);
+
   const {
     conversations,
     activeConversation,
@@ -47,15 +37,31 @@ export default function ChatBox() {
   const [voiceMode, setVoiceMode] = useState(false);
   const [userName, setUserName] = useState("User");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   // TEMP MESSAGE ID
   function createTempMessageId(): number {
     return -Date.now() - Math.floor(Math.random() * 1000);
   }
-  // LOAD DATABASE CONVERSATIONS
 
+  // REDIRECT IF NOT AUTHENTICATED
+  // Waits for the auth store to finish hydrating from localStorage
+  // before deciding there's no token — avoids a false redirect on
+  // first paint.
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    if (authInitialized && !token) {
+      router.replace("/login");
+    }
+  }, [authInitialized, token, router]);
+
+  // LOAD DATABASE CONVERSATIONS
+  // Only fires once we know auth has hydrated AND a token exists.
+  // This is what was previously firing unconditionally on mount and
+  // causing 401s when the token wasn't ready yet (or didn't exist).
+  useEffect(() => {
+    if (authInitialized && token) {
+      loadConversations();
+    }
+  }, [authInitialized, token, loadConversations]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -192,11 +198,6 @@ export default function ChatBox() {
     notionEnabled: boolean,
     language: string,
   ) {
-    console.log("Message:", text);
-    console.log("File:", file);
-    console.log("Stack Overflow:", stackOverflowEnabled);
-    console.log("notion enable", notionEnabled);
-    console.log("LANGUAGE:", language);
     if (loading) {
       return;
     }
@@ -212,203 +213,6 @@ export default function ChatBox() {
 
     await handleNormalChat(text, stackOverflowEnabled, notionEnabled, language);
   }
-  // PDF UPLOAD
-
-  //   async function handlePDFUpload(text: string, file: File) {
-  //     const conversationId = getConversationId();
-
-  //     if (conversationId === null) {
-  //       console.error("Invalid conversation ID:", activeConversation);
-
-  //       return;
-  //     }
-
-  //     if (
-  //       file.type !== "application/pdf" &&
-  //       !file.name.toLowerCase().endsWith(".pdf")
-  //     ) {
-  //       console.error("Only PDF files are supported.");
-
-  //       return;
-  //     }
-
-  //     const maxSize = 10 * 1024 * 1024;
-
-  //     if (file.size > maxSize) {
-  //       console.error("PDF must be smaller than 10 MB.");
-
-  //       return;
-  //     }
-
-  //     // Temporary frontend message ID
-  //     const userMessage: Message = {
-  //       id: createTempMessageId(),
-
-  //       conversation_id: conversationId,
-
-  //       role: "user",
-
-  //       content: text.trim()
-  //         ? `${text.trim()}\n\n📄 ${file.name}`
-  //         : `📄 ${file.name}`,
-  //     };
-
-  //     addMessage(userMessage);
-
-  //     // Temporary frontend AI message ID
-  //     const aiMessageId = createTempMessageId();
-
-  //     const aiMessage: Message = {
-  //       id: aiMessageId,
-
-  //       conversation_id: conversationId,
-
-  //       role: "assistant",
-
-  //       content: "📄 Uploading and understanding your PDF...",
-  //     };
-
-  //     addMessage(aiMessage);
-
-  //     setLoading(true);
-
-  //     try {
-  //       const formData = new FormData();
-
-  //       formData.append("file", file);
-  //       formData.append("conversation_id", String(conversationId));
-
-  //       const token = localStorage.getItem("access_token");
-  //       if (!token) {
-  //         throw new Error("Not authenticated");
-  //       }
-  //       const response = await fetch(`${API_URL}/pdf/upload`, {
-  //         method: "POST",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //         body: formData,
-  //       });
-
-  //       if (!response.ok) {
-  //         let errorMessage = "PDF upload failed.";
-
-  //         try {
-  //           const errorData = await response.json();
-
-  //           errorMessage = getErrorMessage(errorData, errorMessage);
-  //         } catch {
-  //           try {
-  //             const errorText = await response.text();
-
-  //             if (errorText) {
-  //               errorMessage = errorText;
-  //             }
-  //           } catch {
-  //             // Ignore
-  //           }
-  //         }
-
-  //         throw new Error(errorMessage);
-  //       }
-
-  //       const data = (await response.json()) as PDFUploadResponse;
-
-  //       if (
-  //         !Number.isInteger(data.id) ||
-  //         !Number.isInteger(data.conversation_id)
-  //       ) {
-  //         throw new Error("Invalid PDF upload response from server.");
-  //       }
-
-  //       const successMessage = `
-  // 📄 **${data.filename} uploaded successfully.**
-
-  // - Pages: ${data.pages}
-  // - Chunks: ${data.chunks}
-
-  // You can now ask questions about this PDF.
-  //       `.trim();
-
-  //       replaceMessage(aiMessageId, successMessage);
-
-  //       if (text.trim()) {
-  //         await askPDFQuestion(data.id, text.trim(), aiMessageId);
-  //       }
-  //     } catch (error) {
-  //       console.error("PDF upload error:", error);
-
-  //       const errorMessage =
-  //         error instanceof Error ? error.message : "PDF upload failed.";
-
-  //       replaceMessage(aiMessageId, `❌ ${errorMessage}`);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  // PDF QUESTION
-  // async function askPDFQuestion(
-  //   pdfId: number,
-  //   question: string,
-  //   messageId: number,
-  // ) {
-  //   try {
-  //     replaceMessage(messageId, "🤔 Searching the PDF...");
-  //     const token = localStorage.getItem("access_token");
-
-  //     if (!token) {
-  //       throw new Error("Not authenticated");
-  //     }
-  //     const response = await fetch(`${API_URL}/pdf/ask`, {
-  //       method: "POST",
-
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-
-  //       body: JSON.stringify({
-  //         pdf_id: pdfId,
-  //         question: question.trim(),
-  //       }),
-  //     });
-
-  //     if (!response.ok) {
-  //       let errorMessage = "Failed to ask PDF question.";
-
-  //       try {
-  //         const errorData = await response.json();
-
-  //         errorMessage = getErrorMessage(errorData, errorMessage);
-  //       } catch {
-  //         try {
-  //           const errorText = await response.text();
-
-  //           if (errorText) {
-  //             errorMessage = errorText;
-  //           }
-  //         } catch {
-  //           // Ignore
-  //         }
-  //       }
-
-  //       throw new Error(errorMessage);
-  //     }
-
-  //     const data = (await response.json()) as PDFQuestionResponse;
-
-  //     replaceMessage(messageId, data.answer);
-  //   } catch (error) {
-  //     console.error("PDF question error:", error);
-
-  //     const errorMessage =
-  //       error instanceof Error
-  //         ? error.message
-  //         : "Failed to answer the question.";
-
-  //     replaceMessage(messageId, `❌ ${errorMessage}`);
-  //   }
-  // }
 
   // NORMAL CHAT
 
@@ -516,6 +320,17 @@ export default function ChatBox() {
       setLoading(false);
       setSlowResponse(false);
     }
+  }
+
+  // Don't render the chat UI until we know auth has hydrated and a
+  // token exists. Prevents a flash of the chat screen (and any API
+  // calls) before the redirect to /login kicks in.
+  if (!authInitialized || !token) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-(--background) text-(--foreground)">
+        <span className="text-sm text-(--muted)">Loading…</span>
+      </div>
+    );
   }
 
   return (
