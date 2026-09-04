@@ -1,6 +1,6 @@
 import { ChatResponse, Conversation } from "../types/chat";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 
 export async function sendMessage(
@@ -66,7 +66,7 @@ export async function streamMessage(
       message,
       conversation_id: conversationId,
       stack_overflow_enabled: stackOverflowEnabled,
-      notion_enavled: notionEnabled,
+      notion_enabled: notionEnabled,
       language,
     }),
   });

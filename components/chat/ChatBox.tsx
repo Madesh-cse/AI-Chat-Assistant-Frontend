@@ -10,27 +10,27 @@ import { Menu } from "lucide-react";
 import { Message } from "@/types/chat";
 import { streamMessage } from "@/services/chat";
 import { useChatStore } from "@/store/chatStore";
-import  { useSettings } from "../../context/SettingsContext"
+import { useSettings } from "../../context/SettingsContext";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-interface PDFUploadResponse {
-  success: boolean;
-  id: number;
-  filename: string;
-  conversation_id: number;
-  pages: number;
-  chunks: number;
-  message: string;
-}
+// interface PDFUploadResponse {
+//   success: boolean;
+//   id: number;
+//   filename: string;
+//   conversation_id: number;
+//   pages: number;
+//   chunks: number;
+//   message: string;
+// }
 
-interface PDFQuestionResponse {
-  success: boolean;
-  pdf_id: number;
-  filename: string;
-  question: string;
-  answer: string;
-}
+// interface PDFQuestionResponse {
+//   success: boolean;
+//   pdf_id: number;
+//   filename: string;
+//   question: string;
+//   answer: string;
+// }
 
 export default function ChatBox() {
   const {
@@ -195,7 +195,7 @@ export default function ChatBox() {
     console.log("Message:", text);
     console.log("File:", file);
     console.log("Stack Overflow:", stackOverflowEnabled);
-    console.log("notion enable", notionEnabled)
+    console.log("notion enable", notionEnabled);
     console.log("LANGUAGE:", language);
     if (loading) {
       return;
@@ -206,214 +206,218 @@ export default function ChatBox() {
     }
 
     if (file) {
-      await handlePDFUpload(text, file);
-
+      console.warn("File upload is currently disabled.");
       return;
     }
 
-    await handleNormalChat(text,  stackOverflowEnabled, notionEnabled,language,);
+    await handleNormalChat(text, stackOverflowEnabled, notionEnabled, language);
   }
   // PDF UPLOAD
 
-  async function handlePDFUpload(text: string, file: File) {
-    const conversationId = getConversationId();
+  //   async function handlePDFUpload(text: string, file: File) {
+  //     const conversationId = getConversationId();
 
-    if (conversationId === null) {
-      console.error("Invalid conversation ID:", activeConversation);
+  //     if (conversationId === null) {
+  //       console.error("Invalid conversation ID:", activeConversation);
 
-      return;
-    }
+  //       return;
+  //     }
 
-    if (
-      file.type !== "application/pdf" &&
-      !file.name.toLowerCase().endsWith(".pdf")
-    ) {
-      console.error("Only PDF files are supported.");
+  //     if (
+  //       file.type !== "application/pdf" &&
+  //       !file.name.toLowerCase().endsWith(".pdf")
+  //     ) {
+  //       console.error("Only PDF files are supported.");
 
-      return;
-    }
+  //       return;
+  //     }
 
-    const maxSize = 10 * 1024 * 1024;
+  //     const maxSize = 10 * 1024 * 1024;
 
-    if (file.size > maxSize) {
-      console.error("PDF must be smaller than 10 MB.");
+  //     if (file.size > maxSize) {
+  //       console.error("PDF must be smaller than 10 MB.");
 
-      return;
-    }
+  //       return;
+  //     }
 
-    // Temporary frontend message ID
-    const userMessage: Message = {
-      id: createTempMessageId(),
+  //     // Temporary frontend message ID
+  //     const userMessage: Message = {
+  //       id: createTempMessageId(),
 
-      conversation_id: conversationId,
+  //       conversation_id: conversationId,
 
-      role: "user",
+  //       role: "user",
 
-      content: text.trim()
-        ? `${text.trim()}\n\n📄 ${file.name}`
-        : `📄 ${file.name}`,
-    };
+  //       content: text.trim()
+  //         ? `${text.trim()}\n\n📄 ${file.name}`
+  //         : `📄 ${file.name}`,
+  //     };
 
-    addMessage(userMessage);
+  //     addMessage(userMessage);
 
-    // Temporary frontend AI message ID
-    const aiMessageId = createTempMessageId();
+  //     // Temporary frontend AI message ID
+  //     const aiMessageId = createTempMessageId();
 
-    const aiMessage: Message = {
-      id: aiMessageId,
+  //     const aiMessage: Message = {
+  //       id: aiMessageId,
 
-      conversation_id: conversationId,
+  //       conversation_id: conversationId,
 
-      role: "assistant",
+  //       role: "assistant",
 
-      content: "📄 Uploading and understanding your PDF...",
-    };
+  //       content: "📄 Uploading and understanding your PDF...",
+  //     };
 
-    addMessage(aiMessage);
+  //     addMessage(aiMessage);
 
-    setLoading(true);
+  //     setLoading(true);
 
-    try {
-      const formData = new FormData();
+  //     try {
+  //       const formData = new FormData();
 
-      formData.append("file", file);
-      formData.append("conversation_id", String(conversationId));
+  //       formData.append("file", file);
+  //       formData.append("conversation_id", String(conversationId));
 
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-      const response = await fetch(`${API_URL}/pdf/upload`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+  //       const token = localStorage.getItem("access_token");
+  //       if (!token) {
+  //         throw new Error("Not authenticated");
+  //       }
+  //       const response = await fetch(`${API_URL}/pdf/upload`, {
+  //         method: "POST",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: formData,
+  //       });
 
-      if (!response.ok) {
-        let errorMessage = "PDF upload failed.";
+  //       if (!response.ok) {
+  //         let errorMessage = "PDF upload failed.";
 
-        try {
-          const errorData = await response.json();
+  //         try {
+  //           const errorData = await response.json();
 
-          errorMessage = getErrorMessage(errorData, errorMessage);
-        } catch {
-          try {
-            const errorText = await response.text();
+  //           errorMessage = getErrorMessage(errorData, errorMessage);
+  //         } catch {
+  //           try {
+  //             const errorText = await response.text();
 
-            if (errorText) {
-              errorMessage = errorText;
-            }
-          } catch {
-            // Ignore
-          }
-        }
+  //             if (errorText) {
+  //               errorMessage = errorText;
+  //             }
+  //           } catch {
+  //             // Ignore
+  //           }
+  //         }
 
-        throw new Error(errorMessage);
-      }
+  //         throw new Error(errorMessage);
+  //       }
 
-      const data = (await response.json()) as PDFUploadResponse;
+  //       const data = (await response.json()) as PDFUploadResponse;
 
-      if (
-        !Number.isInteger(data.id) ||
-        !Number.isInteger(data.conversation_id)
-      ) {
-        throw new Error("Invalid PDF upload response from server.");
-      }
+  //       if (
+  //         !Number.isInteger(data.id) ||
+  //         !Number.isInteger(data.conversation_id)
+  //       ) {
+  //         throw new Error("Invalid PDF upload response from server.");
+  //       }
 
-      const successMessage = `
-📄 **${data.filename} uploaded successfully.**
+  //       const successMessage = `
+  // 📄 **${data.filename} uploaded successfully.**
 
-- Pages: ${data.pages}
-- Chunks: ${data.chunks}
+  // - Pages: ${data.pages}
+  // - Chunks: ${data.chunks}
 
-You can now ask questions about this PDF.
-      `.trim();
+  // You can now ask questions about this PDF.
+  //       `.trim();
 
-      replaceMessage(aiMessageId, successMessage);
+  //       replaceMessage(aiMessageId, successMessage);
 
-      if (text.trim()) {
-        await askPDFQuestion(data.id, text.trim(), aiMessageId);
-      }
-    } catch (error) {
-      console.error("PDF upload error:", error);
+  //       if (text.trim()) {
+  //         await askPDFQuestion(data.id, text.trim(), aiMessageId);
+  //       }
+  //     } catch (error) {
+  //       console.error("PDF upload error:", error);
 
-      const errorMessage =
-        error instanceof Error ? error.message : "PDF upload failed.";
+  //       const errorMessage =
+  //         error instanceof Error ? error.message : "PDF upload failed.";
 
-      replaceMessage(aiMessageId, `❌ ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  }
+  //       replaceMessage(aiMessageId, `❌ ${errorMessage}`);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
   // PDF QUESTION
-  async function askPDFQuestion(
-    pdfId: number,
-    question: string,
-    messageId: number,
-  ) {
-    try {
-      replaceMessage(messageId, "🤔 Searching the PDF...");
-      const token = localStorage.getItem("access_token");
+  // async function askPDFQuestion(
+  //   pdfId: number,
+  //   question: string,
+  //   messageId: number,
+  // ) {
+  //   try {
+  //     replaceMessage(messageId, "🤔 Searching the PDF...");
+  //     const token = localStorage.getItem("access_token");
 
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-      const response = await fetch(`${API_URL}/pdf/ask`, {
-        method: "POST",
+  //     if (!token) {
+  //       throw new Error("Not authenticated");
+  //     }
+  //     const response = await fetch(`${API_URL}/pdf/ask`, {
+  //       method: "POST",
 
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
 
-        body: JSON.stringify({
-          pdf_id: pdfId,
-          question: question.trim(),
-        }),
-      });
+  //       body: JSON.stringify({
+  //         pdf_id: pdfId,
+  //         question: question.trim(),
+  //       }),
+  //     });
 
-      if (!response.ok) {
-        let errorMessage = "Failed to ask PDF question.";
+  //     if (!response.ok) {
+  //       let errorMessage = "Failed to ask PDF question.";
 
-        try {
-          const errorData = await response.json();
+  //       try {
+  //         const errorData = await response.json();
 
-          errorMessage = getErrorMessage(errorData, errorMessage);
-        } catch {
-          try {
-            const errorText = await response.text();
+  //         errorMessage = getErrorMessage(errorData, errorMessage);
+  //       } catch {
+  //         try {
+  //           const errorText = await response.text();
 
-            if (errorText) {
-              errorMessage = errorText;
-            }
-          } catch {
-            // Ignore
-          }
-        }
+  //           if (errorText) {
+  //             errorMessage = errorText;
+  //           }
+  //         } catch {
+  //           // Ignore
+  //         }
+  //       }
 
-        throw new Error(errorMessage);
-      }
+  //       throw new Error(errorMessage);
+  //     }
 
-      const data = (await response.json()) as PDFQuestionResponse;
+  //     const data = (await response.json()) as PDFQuestionResponse;
 
-      replaceMessage(messageId, data.answer);
-    } catch (error) {
-      console.error("PDF question error:", error);
+  //     replaceMessage(messageId, data.answer);
+  //   } catch (error) {
+  //     console.error("PDF question error:", error);
 
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to answer the question.";
+  //     const errorMessage =
+  //       error instanceof Error
+  //         ? error.message
+  //         : "Failed to answer the question.";
 
-      replaceMessage(messageId, `❌ ${errorMessage}`);
-    }
-  }
+  //     replaceMessage(messageId, `❌ ${errorMessage}`);
+  //   }
+  // }
 
   // NORMAL CHAT
 
-  async function handleNormalChat(text: string, stackOverflowEnabled: boolean,notionEnabled: boolean,language: string,) {
+  async function handleNormalChat(
+    text: string,
+    stackOverflowEnabled: boolean,
+    notionEnabled: boolean,
+    language: string,
+  ) {
     const cleanText = text.trim();
 
     if (!cleanText) {
@@ -460,22 +464,29 @@ You can now ask questions about this PDF.
     }, 10000);
 
     try {
-      await streamMessage(cleanText, conversationId,  stackOverflowEnabled,notionEnabled,(chunk) => {
-        if (!chunk) {
-          return;
-        }
+      await streamMessage(
+        cleanText,
+        conversationId,
+        stackOverflowEnabled,
+        notionEnabled,
+        (chunk) => {
+          if (!chunk) {
+            return;
+          }
 
-        // First chunk arrived
-        if (!hasReceivedResponse) {
-          hasReceivedResponse = true;
+          // First chunk arrived
+          if (!hasReceivedResponse) {
+            hasReceivedResponse = true;
 
-          setSlowResponse(false);
-          useChatStore.getState().replaceMessage(aiMessageId, chunk);
+            setSlowResponse(false);
+            useChatStore.getState().replaceMessage(aiMessageId, chunk);
 
-          return;
-        }
-        useChatStore.getState().updateMessage(aiMessageId, chunk);
-      }, language);
+            return;
+          }
+          useChatStore.getState().updateMessage(aiMessageId, chunk);
+        },
+        language,
+      );
       const state = useChatStore.getState();
       const currentChat = state.conversations.find(
         (chat) => chat.id === conversationId,
