@@ -1,6 +1,6 @@
 import { ChatResponse, Conversation } from "../types/chat";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/backend";
 
 
 export async function sendMessage(

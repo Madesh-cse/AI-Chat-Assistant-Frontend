@@ -4,7 +4,7 @@ export interface AppConnection {
   connected: boolean;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/backend";
 
 export async function getAppConnections(): Promise<AppConnection[]> {
   const response = await fetch(
