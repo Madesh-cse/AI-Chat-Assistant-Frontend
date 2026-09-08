@@ -3,6 +3,7 @@ import { ThemeProvider } from "../context/ThemeContext";
 import { SettingsProvider } from "../context/SettingsContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Providers from "./providers";
+import { Analytics } from "@vercel/analytics/next";
 
 export default function RootLayout({
   children,
@@ -17,6 +18,7 @@ export default function RootLayout({
             <SettingsProvider>
               <LanguageProvider>
                 {children}
+                <Analytics />
               </LanguageProvider>
             </SettingsProvider>
           </ThemeProvider>
