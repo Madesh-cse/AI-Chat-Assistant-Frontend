@@ -736,7 +736,7 @@ export default function ChatInput({
                 onClick={() =>
                   fileInputRef.current?.click()
                 }
-                disabled={loading}
+                disabled={true}
                 title="Upload PDF"
                 aria-label="Upload PDF"
                 className="
