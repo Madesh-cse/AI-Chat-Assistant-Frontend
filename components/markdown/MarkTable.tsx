@@ -4,12 +4,7 @@ interface Props {
   children: ReactNode;
 }
 
-// -----------------------------
-// Table Wrapper
-// -----------------------------
-export function Table({
-  children,
-}: Props) {
+export function Table({ children }: Props) {
   return (
     <div
       className="
@@ -17,7 +12,10 @@ export function Table({
         overflow-x-auto
         rounded-xl
         border
-        border-[#3a3a3a]
+        border-(--border)
+        bg-(--card)
+        transition-colors
+        duration-200
       "
     >
       <table
@@ -25,6 +23,7 @@ export function Table({
           w-full
           border-collapse
           text-sm
+          text-(--foreground)
         "
       >
         {children}
@@ -33,17 +32,14 @@ export function Table({
   );
 }
 
-// -----------------------------
-// Table Head
-// -----------------------------
-export function TableHead({
-  children,
-}: Props) {
+export function TableHead({ children }: Props) {
   return (
     <thead
       className="
-        bg-[#2d2d2d]
-        text-gray-100
+        bg-(--input-bg)
+        text-(--foreground)
+        transition-colors
+        duration-200
       "
     >
       {children}
@@ -51,32 +47,30 @@ export function TableHead({
   );
 }
 
-// -----------------------------
-// Table Body
-// -----------------------------
-export function TableBody({
-  children,
-}: Props) {
+export function TableBody({ children }: Props) {
   return (
-    <tbody className="bg-[#212121]">
+    <tbody
+      className="
+        bg-(--card)
+        text-(--foreground)
+        transition-colors
+        duration-200
+      "
+    >
       {children}
     </tbody>
   );
 }
 
-// -----------------------------
-// Table Row
-// -----------------------------
-export function TableRow({
-  children,
-}: Props) {
+export function TableRow({ children }: Props) {
   return (
     <tr
       className="
         border-b
-        border-[#3a3a3a]
-        hover:bg-[#2a2a2a]
+        border-(--border)
         transition-colors
+        duration-200
+        hover:bg-(--hover)
       "
     >
       {children}
@@ -84,21 +78,19 @@ export function TableRow({
   );
 }
 
-// -----------------------------
-// Table Header Cell
-// -----------------------------
-export function TableHeader({
-  children,
-}: Props) {
+export function TableHeader({ children }: Props) {
   return (
     <th
       className="
+        border
+        border-(--border)
         px-5
         py-3
         text-left
         font-semibold
-        border
-        border-[#3a3a3a]
+        text-(--foreground)
+        transition-colors
+        duration-200
       "
     >
       {children}
@@ -106,21 +98,18 @@ export function TableHeader({
   );
 }
 
-// -----------------------------
-// Table Data Cell
-// -----------------------------
-export function TableCell({
-  children,
-}: Props) {
+export function TableCell({ children }: Props) {
   return (
     <td
       className="
+        border
+        border-(--border)
         px-5
         py-3
-        border
-        border-[#3a3a3a]
-        text-gray-300
         align-top
+        text-(--muted)
+        transition-colors
+        duration-200
       "
     >
       {children}
