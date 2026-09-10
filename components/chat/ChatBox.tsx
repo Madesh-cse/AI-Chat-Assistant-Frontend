@@ -327,7 +327,7 @@ export default function ChatBox() {
   // calls) before the redirect to /login kicks in.
   if (!authInitialized || !token) {
     return (
-      <div className="flex h-screen items-center justify-center bg-(--background) text-(--foreground)">
+      <div className="flex h-screen items-center justify-center bg-(--foreground)/10 text-(--foreground)">
         <span className="text-sm text-(--muted)">Loading…</span>
       </div>
     );
