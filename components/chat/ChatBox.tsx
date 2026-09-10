@@ -334,7 +334,7 @@ export default function ChatBox() {
   }
 
   return (
-    <div className="flex h-screen bg-(--background) text-(--foreground)">
+    <div className="flex h-screen bg-(--foreground)/10 text-(--foreground)">
       <Sidebar
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
