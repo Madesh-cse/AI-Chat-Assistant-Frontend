@@ -13,6 +13,7 @@ import { streamMessage } from "@/services/chat";
 import { useChatStore } from "@/store/chatStore";
 import { useAuthStore } from "@/store/authStore";
 import { useSettings } from "../../context/SettingsContext";
+import QuickActions from "./QuickAction";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/backend";
 
@@ -37,6 +38,7 @@ export default function ChatBox() {
   const [voiceMode, setVoiceMode] = useState(false);
   const [userName, setUserName] = useState("User");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [presetText, setPresetText] = useState<string | undefined>();
 
   // TEMP MESSAGE ID
   function createTempMessageId(): number {
@@ -394,6 +396,12 @@ export default function ChatBox() {
                 loading={loading}
                 voiceMode={voiceMode}
                 onVoiceModeChange={setVoiceMode}
+                presetText={presetText}
+                onPresetConsumed={() => setPresetText(undefined)}
+              />
+              <QuickActions
+                onSelect={(text) => setPresetText(text)}
+                disabled={loading}  
               />
             </div>
           </div>

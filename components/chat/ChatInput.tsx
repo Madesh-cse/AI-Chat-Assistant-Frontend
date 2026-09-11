@@ -27,11 +27,10 @@ interface ChatInputProps {
   loading: boolean;
   voiceMode: boolean;
   onVoiceModeChange: (enabled: boolean) => void;
+  presetText?: string;        
+  onPresetConsumed?: () => void;
 }
 
-// --------------------------------------------------
-// FILE SIZE FORMATTER
-// --------------------------------------------------
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) {
@@ -49,9 +48,6 @@ function formatFileSize(bytes: number): string {
   return `${mb.toFixed(1)} MB`;
 }
 
-// --------------------------------------------------
-// PASTE CONFIG
-// --------------------------------------------------
 
 const PASTE_CHAR_THRESHOLD = 1500;
 const PASTE_LINE_THRESHOLD = 15;
@@ -88,6 +84,8 @@ export default function ChatInput({
   loading,
   voiceMode,
   onVoiceModeChange,
+  presetText,
+  onPresetConsumed,
 }: ChatInputProps) {
   const { language } = useSettings();
 
@@ -110,6 +108,19 @@ export default function ChatInput({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
+
+    // NEW: fill textarea when a quick action is picked
+  useEffect(() => {
+    if (!presetText) return;
+
+    setText(presetText);
+    onPresetConsumed?.();
+
+    requestAnimationFrame(() => {
+      textInputRef.current?.focus();
+      resizeTextarea();
+    });
+  }, [presetText]);
 
 
   function resizeTextarea() {
