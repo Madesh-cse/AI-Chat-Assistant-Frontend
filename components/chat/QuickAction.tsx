@@ -147,7 +147,7 @@ const ACTIONS: QuickAction[] = [
   },
   {
     key: "choice",
-    label: "Claude's choice",
+    label: "Veronica's choice",
     icon: Sparkles,
     suggestions: [
       {
