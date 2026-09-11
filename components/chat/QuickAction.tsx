@@ -290,7 +290,7 @@ export default function QuickActions({
             top-full
             mt-2
             w-full
-            max-w-md
+            max-w-3xl
             rounded-xl
             border
             border-(--border)
