@@ -247,7 +247,6 @@ export default function ChatInput({
       textInputRef.current?.focus();
     });
   }
--
 
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
@@ -370,7 +369,6 @@ export default function ChatInput({
     (!!text.trim() ||
       !!file ||
       !!pastedContent);
-
 
   return (
     <div className="bg-(--background) pt-2 pb-2">
@@ -700,6 +698,7 @@ export default function ChatInput({
             value={text}
             onChange={handleTextChange}
             onPaste={handlePaste}
+            onKeyDown={handleKeyDown}
             disabled={loading}
             rows={1}
             placeholder={
